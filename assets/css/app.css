@@ -3,3 +3,25 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+/* Transición suave para resaltar cambios */
+tr {
+  transition: background-color 0.5s ease;
+}
+
+/* Añadir un indicador de actualización en tiempo real */
+.bg-green-100 {
+  animation: pulse-green 2s;
+}
+
+@keyframes pulse-green {
+  0% {
+    background-color: #d1fae5;
+  }
+  50% {
+    background-color: #a7f3d0;
+  }
+  100% {
+    background-color: transparent;
+  }
+}

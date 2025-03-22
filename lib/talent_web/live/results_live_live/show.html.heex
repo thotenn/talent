@@ -1,5 +1,6 @@
 <.header>
   Resultados: <%= @category.name %>
+  <:subtitle>Los resultados se actualizan automáticamente cuando los jueces califican</:subtitle>
   <:actions>
     <.link navigate={~p"/notary/results"} class="text-sm">
       &larr; Volver a las categorías
@@ -7,8 +8,15 @@
   </:actions>
 </.header>
 
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-  <h2 class="text-xl font-semibold mb-4">Clasificación General</h2>
+<div class="bg-white shadow-md rounded-lg p-6 mb-8" 
+     id="results-table" 
+     phx-hook="HighlightUpdates">
+  <h2 class="text-xl font-semibold mb-4">
+    Clasificación General
+    <span class="inline-flex ml-2 items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+      En tiempo real
+    </span>
+  </h2>
   
   <%= if Enum.empty?(@results) do %>
     <p class="text-gray-600 italic">No hay resultados disponibles para esta categoría.</p>
@@ -29,7 +37,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <%= for {result, index} <- Enum.with_index(@results) do %>
-            <tr class={if index == 0, do: "bg-yellow-50", else: ""}>
+            <tr class={if index == 0, do: "bg-yellow-50", else: ""} id={"participant-row-#{result.participant.id}"}>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 <%= index + 1 %>
                 <%= if index == 0 do %>
@@ -40,11 +48,11 @@
                 <%= result.participant.name %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                <%= result.total_score %>
+                <%= format_value(result.total_score) %>
               </td>
               <%= for judge <- @judges do %>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= Map.get(result.judge_scores, judge.id, 0) %>
+                  <%= format_value(Map.get(result.judge_scores, judge.id, 0)) %>
                 </td>
               <% end %>
             </tr>
@@ -55,8 +63,15 @@
   <% end %>
 </div>
 
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-  <h2 class="text-xl font-semibold mb-4">Desglose por Criterios</h2>
+<div class="bg-white shadow-md rounded-lg p-6 mb-8" 
+     id="criteria-table"
+     phx-hook="HighlightUpdates">
+  <h2 class="text-xl font-semibold mb-4">
+    Desglose por Criterios
+    <span class="inline-flex ml-2 items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+      En tiempo real
+    </span>
+  </h2>
   
   <%= if Enum.empty?(@results) do %>
     <p class="text-gray-600 italic">No hay resultados disponibles para esta categoría.</p>
@@ -75,7 +90,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <%= for result <- @results do %>
-            <tr>
+            <tr id={"criteria-row-#{result.participant.id}"}>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 <%= result.participant.name %>
               </td>

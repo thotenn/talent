@@ -367,23 +367,23 @@ end
             s.participant_id == ^attrs.participant_id and
             s.criterion_id == ^attrs.criterion_id
 
-    # Convertir el valor a entero si viene como string
-    attrs = if is_binary(attrs.value) do
-      # Primero intentamos convertir a float y luego a entero
-      # Esto es útil si tienes valores como "8.5" que deberían convertirse a 8 o 9
-      value =
-        case Float.parse(attrs.value) do
-          {float_val, _} -> round(float_val)
-          :error -> 0 # valor por defecto si no se puede convertir
-        end
-      Map.put(attrs, :value, value)
-    else
-      # Si ya es un entero o float, nos aseguramos de que sea entero
-      value = if is_float(attrs.value), do: round(attrs.value), else: attrs.value
-      Map.put(attrs, :value, value)
-    end
+    # Asegurar que el valor sea un entero para almacenamiento
+    attrs =
+      cond do
+        is_binary(attrs.value) ->
+          case Float.parse(attrs.value) do
+            {float_val, _} -> Map.put(attrs, :value, round(float_val))
+            :error -> Map.put(attrs, :value, 0)
+          end
+        is_float(attrs.value) ->
+          Map.put(attrs, :value, round(attrs.value))
+        is_integer(attrs.value) ->
+          attrs
+        true ->
+          Map.put(attrs, :value, 0)
+      end
 
-    case Repo.one(score_query) do
+    result = case Repo.one(score_query) do
       nil ->
         %Score{}
         |> Score.changeset(attrs)
@@ -393,6 +393,23 @@ end
         existing_score
         |> Score.changeset(attrs)
         |> Repo.update()
+    end
+
+    # En caso de éxito, transmitir el evento de actualización
+    case result do
+      {:ok, _score} ->
+        # Obtener información de la categoría del participante
+        participant = Talent.Competitions.get_participant!(attrs.participant_id)
+        # Emitir evento con la categoría para que los suscriptores puedan filtrar
+        IO.puts("thotenn.Emitiendo evento de actualización para categoría: #{participant.category_id}")
+        Phoenix.PubSub.broadcast(
+          Talent.PubSub,
+          "scores:updates",
+          {:score_updated, %{category_id: participant.category_id}}
+        )
+        result
+      _ ->
+        result
     end
   end
 end

@@ -3,9 +3,16 @@ defmodule TalentWeb.ResultsLive.Show do
 
   alias Talent.Competitions
   alias Talent.Scoring
+  alias Decimal
 
   @impl true
   def mount(%{"category_id" => category_id}, _session, socket) do
+    # Suscribirse al canal de actualizaciones de puntuaciones
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Talent.PubSub, "scores:updates")
+    end
+
+    category_id = String.to_integer(category_id)
     category = Competitions.get_category!(category_id)
     participants = Competitions.list_participants_by_category(category.id)
 
@@ -19,6 +26,7 @@ defmodule TalentWeb.ResultsLive.Show do
     results = calculate_results(participants, judges, criteria)
 
     {:ok, socket
+      |> assign(:category_id, category_id)
       |> assign(:category, category)
       |> assign(:participants, participants)
       |> assign(:judges, judges)
@@ -56,9 +64,34 @@ defmodule TalentWeb.ResultsLive.Show do
     |> Enum.sort_by(fn result -> result.total_score end, :desc)
   end
 
-  # Añadir esta función al módulo TalentWeb.ResultsLive.Show
-  defp format_value(value) when is_struct(value, Decimal), do: Decimal.to_integer(value)
-  defp format_value(value) when is_float(value), do: trunc(value)
+  # Función para manejar valores decimales
+  defp format_value(value) when is_struct(value, Decimal) do
+    # Primero redondea el valor decimal para no perder precisión
+    Decimal.round(value, 0) |> Decimal.to_integer()
+  end
+  defp format_value(value) when is_float(value), do: round(value)
   defp format_value(value) when is_integer(value), do: value
   defp format_value(_), do: 0
+
+  @impl true
+  def handle_info({:score_updated, %{category_id: updated_category_id}}, socket) do
+    # Solo actualizar si la categoría actualizada es la que estamos viendo
+    if updated_category_id == socket.assigns.category_id do
+      IO.puts("thotenn.Actualizando resultados para categoría: #{socket.assigns.category_id}")
+      # Recalcular los resultados con los datos actualizados
+      participants = Competitions.list_participants_by_category(socket.assigns.category_id)
+      judges = Competitions.list_judges_by_category(socket.assigns.category_id)
+      criteria = Scoring.list_root_scoring_criteria_by_category(socket.assigns.category_id)
+
+      updated_results = calculate_results(participants, judges, criteria)
+
+
+      IO.inspect(updated_results, label: "Resultados actualizados")
+
+      {:noreply, assign(socket, :results, updated_results)}
+    else
+      # Si no es la categoría que estamos viendo, no hacemos nada
+      {:noreply, socket}
+    end
+  end
 end
