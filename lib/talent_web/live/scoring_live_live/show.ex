@@ -84,10 +84,10 @@ defmodule TalentWeb.ScoringLive.Show do
 
     if Enum.empty?(errors) do
       # Recalcular el formulario con las nuevas puntuaciones
-      existing_scores = Scoring.get_judge_scores_for_participant(judge.id, participant.id)
-      |> Enum.group_by(fn score -> score.criterion_id end)
+      # existing_scores = Scoring.get_judge_scores_for_participant(judge.id, participant.id)
+      # |> Enum.group_by(fn score -> score.criterion_id end)
 
-      scores_form = init_scores_form(socket.assigns.criteria, existing_scores)
+      # scores_form = init_scores_form(socket.assigns.criteria, existing_scores)
 
       {:noreply, socket
         |> put_flash(:info, "Puntuaciones guardadas correctamente")

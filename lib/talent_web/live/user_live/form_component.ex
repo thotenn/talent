@@ -52,7 +52,12 @@ defmodule TalentWeb.UserLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"user" => user_params}, socket) do
-    changeset = Accounts.change_user(socket.assigns.user, user_params)
+    changeset = if socket.assigns.user.id do
+      Accounts.change_user(socket.assigns.user, user_params)
+    else
+      Accounts.change_user_registration(socket.assigns.user, user_params)
+    end
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -61,14 +66,36 @@ defmodule TalentWeb.UserLive.FormComponent do
   end
 
   defp save_user(socket, :edit, user_params) do
-    case Accounts.update_user(socket.assigns.user, user_params) do
+    # Primero, actualizar los campos básicos (email, rol)
+    basic_params = Map.take(user_params, ["email", "role"])
+
+    case Accounts.update_user(socket.assigns.user, basic_params) do
       {:ok, user} ->
         # Si el rol es "jurado", asegurarse de que tenga un perfil de juez
         if user.role == "jurado" do
           ensure_judge_profile(user)
         end
 
-        notify_parent({:saved, user})
+        # Ahora, si se proporcionó una nueva contraseña, actualizarla
+        user_with_password_updated =
+          if user_params["password"] && String.trim(user_params["password"]) != "" do
+            password_params = %{
+              "password" => user_params["password"],
+              "password_confirmation" => user_params["password"]
+            }
+
+            case Accounts.reset_user_password(user, password_params) do
+              {:ok, updated_user} ->
+                updated_user
+              {:error, _changeset} ->
+                # En caso de error al cambiar la contraseña, seguimos con el usuario ya actualizado
+                user
+            end
+          else
+            user
+          end
+
+        notify_parent({:saved, user_with_password_updated})
 
         {:noreply,
          socket
