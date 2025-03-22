@@ -30,15 +30,12 @@ defmodule Talent.AccountsFixtures do
   end
 
   @doc """
-  Generate a user.
+  Generate a user for the accounts context.
   """
-  def user_fixture(attrs \\ %{}) do
+  def accounts_user_fixture(attrs \\ %{}) do
     {:ok, user} =
       attrs
-      |> Enum.into(%{
-        email: "some email",
-        role: "some role"
-      })
+      |> valid_user_attributes()
       |> Talent.Accounts.create_user()
 
     user
