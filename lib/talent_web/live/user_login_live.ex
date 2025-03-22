@@ -26,7 +26,7 @@ defmodule TalentWeb.UserLoginLive do
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Iniciando sesión..." class="w-full bg-zinc-900 hover:bg-zinc-700">
+          <.button phx-disable-with="Iniciando sesión...">
             Iniciar sesión <span aria-hidden="true">→</span>
           </.button>
         </:actions>

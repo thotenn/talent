@@ -35,7 +35,7 @@ defmodule TalentWeb.UserRegistrationLive do
         <.input field={@form[:password]} type="password" label="Contraseña" required />
 
         <:actions>
-          <.button phx-disable-with="Creando cuenta..." class="w-full bg-zinc-900 hover:bg-zinc-700">Crear cuenta</.button>
+          <.button phx-disable-with="Creando cuenta...">Crear cuenta</.button>
         </:actions>
       </.simple_form>
     </div>

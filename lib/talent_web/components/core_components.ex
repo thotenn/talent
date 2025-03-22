@@ -234,7 +234,7 @@ defmodule TalentWeb.CoreComponents do
         "phx-submit-loading:opacity-75 rounded-lg py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         "inline-block", # Ensure button is visible
-        @class || "bg-zinc-900 hover:bg-zinc-700"  # Usa la clase personalizada o la predeterminada
+        @class || "w-full bg-zinc-900 hover:bg-zinc-700"  # Usa la clase personalizada o la predeterminada
       ]}
       {@rest}
     >
