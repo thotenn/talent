@@ -91,7 +91,7 @@ defmodule TalentWeb.ScoringLive.Show do
 
       {:noreply, socket
         |> put_flash(:info, "Puntuaciones guardadas correctamente")
-        |> push_navigate(to: ~p"/jury/scoring")
+        |> push_navigate(to: ~p"/jury/scoring?category_id=#{participant.category_id}")
       }
     else
       {:noreply, socket

@@ -47,7 +47,25 @@ defmodule TalentWeb.ScoringLive.Index do
 
   @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    # Maneja el parámetro category_id si existe
+    if Map.has_key?(params, "category_id") && params["category_id"] != "" do
+      category_id = String.to_integer(params["category_id"])
+      category = Enum.find(socket.assigns.categories, &(&1.id == category_id))
+
+      participants =
+        if category do
+          Competitions.list_participants_by_category(category_id)
+        else
+          []
+        end
+
+      {:noreply, socket
+        |> assign(:selected_category, category)
+        |> assign(:participants, participants)
+        |> assign(:page_title, "Panel de Calificaciones")}
+    else
+      {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    end
   end
 
   defp apply_action(socket, :index, _params) do
@@ -57,19 +75,29 @@ defmodule TalentWeb.ScoringLive.Index do
 
   @impl true
   def handle_event("select-category", %{"category_id" => category_id}, socket) do
-    category_id = String.to_integer(category_id)
-    category = Enum.find(socket.assigns.categories, &(&1.id == category_id))
+    if category_id != "" do
+      category_id = String.to_integer(category_id)
+      category = Enum.find(socket.assigns.categories, &(&1.id == category_id))
 
-    participants =
-      if category do
-        Competitions.list_participants_by_category(category_id)
-      else
-        []
-      end
+      participants =
+        if category do
+          Competitions.list_participants_by_category(category_id)
+        else
+          []
+        end
 
-    {:noreply, socket
-      |> assign(:selected_category, category)
-      |> assign(:participants, participants)
-    }
+      # Actualiza la URL con el parámetro category_id
+      {:noreply, socket
+        |> assign(:selected_category, category)
+        |> assign(:participants, participants)
+        |> push_patch(to: ~p"/jury/scoring?category_id=#{category_id}")
+      }
+    else
+      {:noreply, socket
+        |> assign(:selected_category, nil)
+        |> assign(:participants, [])
+        |> push_patch(to: ~p"/jury/scoring")
+      }
+    end
   end
 end
