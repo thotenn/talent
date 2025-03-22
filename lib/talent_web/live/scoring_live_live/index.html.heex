@@ -25,7 +25,7 @@
       <h2 class="text-lg font-medium mb-2">Selecciona una categoría</h2>
       <form phx-change="select-category">
         <select name="category_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-          <option value="">-- Selecciona una categoría --</option>
+          <option value="0">-- Selecciona una categoría --</option>
           <%= for category <- @categories do %>
             <option value={category.id}><%= category.name %></option>
           <% end %>

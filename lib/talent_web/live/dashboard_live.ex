@@ -61,6 +61,20 @@ defmodule TalentWeb.DashboardLive do
                   <div class="text-xl mb-2">⚖️</div>
                   <div class="font-medium">Gestionar Jueces</div>
                 </.link>
+                <.link
+                  navigate={~p"/secretary/participants"}
+                  class="bg-red-100 hover:bg-red-200 p-4 rounded-lg text-center"
+                >
+                  <div class="text-xl mb-2">🕺</div>
+                  <div class="font-medium">Gestionar Participantes</div>
+                </.link>
+                <.link
+                  navigate={~p"/notary/results"}
+                  class="bg-indigo-100 hover:bg-indigo-200 p-4 rounded-lg text-center"
+                >
+                  <div class="text-xl mb-2">📊</div>
+                  <div class="font-medium">Ver Resultados</div>
+                </.link>
               </div>
             <% "jurado" -> %>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">

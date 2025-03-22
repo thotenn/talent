@@ -40,11 +40,11 @@
                 <%= result.participant.name %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                <%= Float.round(result.total_score, 1) %>
+                <%= Float.round(result.total_score * 1.0, 1) %>
               </td>
               <%= for judge <- @judges do %>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= Float.round(Map.get(result.judge_scores, judge.id, 0), 1) %>
+                  <%= Float.round(Map.get(result.judge_scores, judge.id, 0) * 1.0, 1) %>
                 </td>
               <% end %>
             </tr>
@@ -81,7 +81,7 @@
               </td>
               <%= for criterion <- @criteria do %>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= Float.round(Map.get(result.criteria_scores, criterion.id, 0), 1) %>
+                  <%= Float.round(Map.get(result.criteria_scores, criterion.id, 0) * 1.0, 1) %>
                 </td>
               <% end %>
             </tr>

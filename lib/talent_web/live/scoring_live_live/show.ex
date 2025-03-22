@@ -1,6 +1,8 @@
 defmodule TalentWeb.ScoringLive.Show do
   use TalentWeb, :live_view
 
+  on_mount {TalentWeb.UserAuth, :ensure_authenticated}
+
   alias Talent.Competitions
   alias Talent.Scoring
   # alias Talent.Scoring.Score
@@ -11,7 +13,7 @@ defmodule TalentWeb.ScoringLive.Show do
     judge = Competitions.get_judge_by_user_id(current_user.id)
 
     if judge do
-      participant = Competitions.get_participant!(participant_id)
+      participant = Competitions.get_participant!(participant_id) |> Talent.Repo.preload(:category)
       category = participant.category
 
       # Verificar si el juez está asignado a esta categoría
@@ -88,8 +90,8 @@ defmodule TalentWeb.ScoringLive.Show do
       scores_form = init_scores_form(socket.assigns.criteria, existing_scores)
 
       {:noreply, socket
-        |> assign(:scores_form, scores_form)
         |> put_flash(:info, "Puntuaciones guardadas correctamente")
+        |> push_navigate(to: ~p"/jury/scoring")
       }
     else
       {:noreply, socket

@@ -330,7 +330,7 @@ defmodule Talent.Competitions do
       ** (Ecto.NoResultsError)
 
   """
-  def get_participant!(id), do: Repo.get!(Participant, id)
+  def get_participant!(id), do: Repo.get!(Participant, id) |> Repo.preload(:category)
 
   @doc """
   Creates a participant.

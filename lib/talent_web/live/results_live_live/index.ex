@@ -2,12 +2,31 @@ defmodule TalentWeb.ResultsLive.Index do
   use TalentWeb, :live_view
 
   alias Talent.Competitions
+  alias Talent.Repo
 
   on_mount {TalentWeb.UserAuth, :ensure_authenticated}
 
   @impl true
   def mount(_params, _session, socket) do
-    categories = Competitions.list_categories()
+    current_user = socket.assigns.current_user
+
+    categories = case current_user.role do
+      "jurado" ->
+        # Obtener el juez asociado al usuario actual
+        judge = Competitions.get_judge_by_user_id(current_user.id)
+
+        if judge do
+          # Obtener las categorías asignadas a este juez
+          judge = Repo.preload(judge, :categories)
+          judge.categories
+        else
+          # Si no hay juez asignado, devolver lista vacía
+          []
+        end
+      _ ->
+        # Para otros roles (escribana, administrador), mostrar todas las categorías
+        Competitions.list_categories()
+    end
 
     {:ok, socket
       |> assign(:categories, categories)
