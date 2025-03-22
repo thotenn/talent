@@ -55,4 +55,10 @@ defmodule TalentWeb.ResultsLive.Show do
     end)
     |> Enum.sort_by(fn result -> result.total_score end, :desc)
   end
+
+  # Añadir esta función al módulo TalentWeb.ResultsLive.Show
+  defp format_value(value) when is_struct(value, Decimal), do: Decimal.to_integer(value)
+  defp format_value(value) when is_float(value), do: trunc(value)
+  defp format_value(value) when is_integer(value), do: value
+  defp format_value(_), do: 0
 end
