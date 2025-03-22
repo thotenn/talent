@@ -1,0 +1,27 @@
+<.header>
+  Usuario <%= @user.id %>
+  <:subtitle>Datos del usuario en el sistema.</:subtitle>
+  <:actions>
+    <.link patch={~p"/admin/users/#{@user}/edit"} phx-click={JS.push_focus()}>
+      <.button>Editar usuario</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Email"><%= @user.email %></:item>
+  <:item title="Rol"><%= @user.role %></:item>
+</.list>
+
+<.back navigate={~p"/admin/users"}>Volver a la lista de usuarios</.back>
+
+<.modal :if={@live_action == :edit} id="user-modal" show on_cancel={JS.patch(~p"/admin/users/#{@user}")}>
+  <.live_component
+    module={TalentWeb.UserLive.FormComponent}
+    id={@user.id}
+    title={@page_title}
+    action={@live_action}
+    user={@user}
+    patch={~p"/admin/users/#{@user}"}
+  />
+</.modal>

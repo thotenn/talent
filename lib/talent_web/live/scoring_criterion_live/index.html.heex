@@ -1,0 +1,49 @@
+<.header>
+  Criterios de Puntuación
+  <:actions>
+    <.link patch={~p"/admin/scoring_criteria/new"}>
+      <.button>Nuevo Criterio</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="scoring_criteria"
+  rows={@streams.scoring_criteria}
+>
+  <:col :let={{_id, criterion}} label="Nombre"><%= criterion.name %></:col>
+  <:col :let={{_id, criterion}} label="Descripción"><%= criterion.description %></:col>
+  <:col :let={{_id, criterion}} label="Categoría">
+    <%= if criterion.category, do: criterion.category.name, else: "Sin categoría" %>
+  </:col>
+  <:col :let={{_id, criterion}} label="Puntaje Máximo"><%= criterion.max_points %></:col>
+  <:col :let={{_id, criterion}} label="Criterio Padre">
+    <%= if criterion.parent, do: criterion.parent.name, else: "Criterio Principal" %>
+  </:col>
+  <:action :let={{_id, criterion}}>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/scoring_criteria/#{criterion}"}>Ver</.link>
+    </div>
+    <.link patch={~p"/admin/scoring_criteria/#{criterion}/edit"}>Editar</.link>
+  </:action>
+  <:action :let={{id, criterion}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: criterion.id}) |> hide("##{id}")}
+      data-confirm="¿Estás seguro de que deseas eliminar este criterio?"
+    >
+      Eliminar
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="criterion-modal" show on_cancel={JS.patch(~p"/admin/scoring_criteria")}>
+  <.live_component
+    module={TalentWeb.ScoringCriterionLive.FormComponent}
+    id={@criterion.id || :new}
+    title={@page_title}
+    action={@live_action}
+    criterion={@criterion}
+    categories={@categories}
+    patch={~p"/admin/scoring_criteria"}
+  />
+</.modal>

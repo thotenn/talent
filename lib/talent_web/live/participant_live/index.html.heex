@@ -1,0 +1,44 @@
+<.header>
+  Participantes
+  <:actions>
+    <.link patch={~p"/secretary/participants/new"}>
+      <.button>Nuevo Participante</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="participants"
+  rows={@streams.participants}
+>
+  <:col :let={{_id, participant}} label="Nombre"><%= participant.name %></:col>
+  <:col :let={{_id, participant}} label="Categoría">
+    <%= participant.category_name %>
+  </:col>
+  <:action :let={{_id, participant}}>
+    <div class="sr-only">
+      <.link navigate={~p"/secretary/participants/#{participant}"}>Ver</.link>
+    </div>
+    <.link patch={~p"/secretary/participants/#{participant}/edit"}>Editar</.link>
+  </:action>
+  <:action :let={{id, participant}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: participant.id}) |> hide("##{id}")}
+      data-confirm="¿Estás seguro de que deseas eliminar este participante?"
+    >
+      Eliminar
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="participant-modal" show on_cancel={JS.patch(~p"/secretary/participants")}>
+  <.live_component
+    module={TalentWeb.ParticipantLive.FormComponent}
+    id={@participant.id || :new}
+    title={@page_title}
+    action={@live_action}
+    participant={@participant}
+    categories={@categories}
+    patch={~p"/secretary/participants"}
+  />
+</.modal>

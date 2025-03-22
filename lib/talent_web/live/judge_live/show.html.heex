@@ -1,0 +1,39 @@
+<.header>
+  <%= @page_title %>
+  <:subtitle>Gestiona las categorías asignadas a este juez</:subtitle>
+  <:actions>
+    <.back navigate={~p"/admin/judges"}>Volver a la lista de jueces</.back>
+  </:actions>
+</.header>
+
+<div class="mt-8">
+  <h2 class="text-lg font-semibold mb-4">Datos del Juez</h2>
+  <.list>
+    <:item title="Nombre"><%= @judge.name %></:item>
+    <:item title="Email"><%= @judge.user.email %></:item>
+  </.list>
+</div>
+
+<div class="mt-8">
+  <h2 class="text-lg font-semibold mb-4">Categorías Asignadas</h2>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <%= for category <- @categories do %>
+      <div class="border rounded-lg p-4 flex items-center justify-between">
+        <div>
+          <h3 class="font-medium"><%= category.name %></h3>
+          <p class="text-sm text-gray-600"><%= category.description %></p>
+        </div>
+        <div>
+          <.button 
+            phx-click="toggle_category" 
+            phx-value-category-id={category.id}
+            class={if Map.get(@assigned_categories, category.id), do: "bg-red-600 hover:bg-red-800", else: "bg-green-600 hover:bg-green-800"}
+          >
+            <%= if Map.get(@assigned_categories, category.id), do: "Quitar", else: "Asignar" %>
+          </.button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

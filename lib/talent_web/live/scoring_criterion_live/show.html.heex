@@ -1,0 +1,68 @@
+<.header>
+  Criterio de Puntuación: <%= @criterion.name %>
+  <:actions>
+    <.link patch={~p"/admin/scoring_criteria/#{@criterion}/edit"}>
+      <.button>Editar</.button>
+    </.link>
+    <.link navigate={~p"/admin/scoring_criteria"} class="ml-2">
+      Volver
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Nombre"><%= @criterion.name %></:item>
+  <:item title="Descripción"><%= @criterion.description %></:item>
+  <:item title="Categoría">
+    <%= if @criterion.category, do: @criterion.category.name, else: "Sin categoría" %>
+  </:item>
+  <:item title="Puntaje Máximo"><%= @criterion.max_points %></:item>
+  <:item title="Criterio Padre">
+    <%= if @criterion.parent, do: @criterion.parent.name, else: "Criterio Principal" %>
+  </:item>
+</.list>
+
+<%= if @criterion.sub_criteria && length(@criterion.sub_criteria) > 0 do %>
+  <div class="mt-8">
+    <h3 class="text-lg font-medium mb-4">Subcriterios</h3>
+    
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+      <ul role="list" class="divide-y divide-gray-200">
+        <%= for subcriterion <- @criterion.sub_criteria do %>
+          <li>
+            <.link navigate={~p"/admin/scoring_criteria/#{subcriterion}"} class="block hover:bg-gray-50">
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-medium text-indigo-600 truncate"><%= subcriterion.name %></p>
+                  <div class="ml-2 flex-shrink-0 flex">
+                    <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <%= subcriterion.max_points %> pts
+                    </p>
+                  </div>
+                </div>
+                <div class="mt-2 sm:flex sm:justify-between">
+                  <div class="sm:flex">
+                    <p class="flex items-center text-sm text-gray-500">
+                      <%= subcriterion.description %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </.link>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
+
+<.modal :if={@live_action == :edit} id="criterion-modal" show on_cancel={JS.patch(~p"/admin/scoring_criteria/#{@criterion}")}>
+  <.live_component
+    module={TalentWeb.ScoringCriterionLive.FormComponent}
+    id={@criterion.id}
+    title="Editar Criterio de Puntuación"
+    action={@live_action}
+    criterion={@criterion}
+    patch={~p"/admin/scoring_criteria/#{@criterion}"}
+  />
+</.modal>

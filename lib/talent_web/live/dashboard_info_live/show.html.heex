@@ -1,0 +1,25 @@
+<.header>
+  Dashboard info {@dashboard_info.id}
+  <:subtitle>This is a dashboard_info record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/dashboard_infos/#{@dashboard_info}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit dashboard_info</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+</.list>
+
+<.back navigate={~p"/dashboard_infos"}>Back to dashboard_infos</.back>
+
+<.modal :if={@live_action == :edit} id="dashboard_info-modal" show on_cancel={JS.patch(~p"/dashboard_infos/#{@dashboard_info}")}>
+  <.live_component
+    module={TalentWeb.DashboardInfoLive.FormComponent}
+    id={@dashboard_info.id}
+    title={@page_title}
+    action={@live_action}
+    dashboard_info={@dashboard_info}
+    patch={~p"/dashboard_infos/#{@dashboard_info}"}
+  />
+</.modal>

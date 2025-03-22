@@ -1,0 +1,41 @@
+<.header>
+  Gestión de Usuarios
+  <:actions>
+    <.link patch={~p"/admin/users/new"}>
+      <.button>Nuevo Usuario</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="users"
+  rows={@streams.users}
+>
+  <:col :let={{_id, user}} label="Email"><%= user.email %></:col>
+  <:col :let={{_id, user}} label="Rol"><%= String.capitalize(user.role) %></:col>
+  <:col :let={{_id, user}} label="Estado">
+    <%= if user.confirmed_at, do: "Confirmado", else: "Pendiente" %>
+  </:col>
+  <:action :let={{_id, user}}>
+    <%= if is_nil(user.confirmed_at) do %>
+      <.button phx-click="confirm_user" phx-value-id={user.id}>
+        Confirmar
+      </.button>
+    <% end %>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/users/#{user}"}>Ver</.link>
+    </div>
+    <.link patch={~p"/admin/users/#{user}/edit"}>Editar</.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="user-modal" show on_cancel={JS.patch(~p"/admin/users")}>
+  <.live_component
+    module={TalentWeb.UserLive.FormComponent}
+    id={@user.id || :new}
+    title={@page_title}
+    action={@live_action}
+    user={@user}
+    patch={~p"/admin/users"}
+  />
+</.modal>

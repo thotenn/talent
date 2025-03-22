@@ -1,0 +1,53 @@
+defmodule TalentWeb.ScoringCriterionLive.Index do
+  use TalentWeb, :live_view
+
+  alias Talent.Scoring
+  alias Talent.Scoring.ScoringCriterion
+  alias Talent.Competitions
+
+  @impl true
+  def mount(_params, _session, socket) do
+    categories = Competitions.list_categories() |> Enum.map(fn c -> {c.name, c.id} end)
+
+    {:ok, socket
+      |> stream(:scoring_criteria, Scoring.list_scoring_criteria())
+      |> assign(:categories, categories)
+    }
+  end
+
+  @impl true
+  def handle_params(params, _url, socket) do
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp apply_action(socket, :edit, %{"id" => id}) do
+    socket
+    |> assign(:page_title, "Editar Criterio de Puntuación")
+    |> assign(:criterion, Scoring.get_scoring_criterion!(id))
+  end
+
+  defp apply_action(socket, :new, _params) do
+    socket
+    |> assign(:page_title, "Nuevo Criterio de Puntuación")
+    |> assign(:criterion, %ScoringCriterion{})
+  end
+
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:page_title, "Criterios de Puntuación")
+    |> assign(:criterion, nil)
+  end
+
+  @impl true
+  def handle_info({TalentWeb.ScoringCriterionLive.FormComponent, {:saved, criterion}}, socket) do
+    {:noreply, stream_insert(socket, :scoring_criteria, criterion)}
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    criterion = Scoring.get_scoring_criterion!(id)
+    {:ok, _} = Scoring.delete_scoring_criterion(criterion)
+
+    {:noreply, stream_delete(socket, :scoring_criteria, criterion)}
+  end
+end

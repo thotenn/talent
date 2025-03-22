@@ -1,0 +1,63 @@
+<.header>
+  Calificación para: <%= @participant.name %>
+  <:subtitle>Categoría: <%= @category.name %></:subtitle>
+  <:actions>
+    <.link navigate={~p"/jury/scoring"} class="text-sm">
+      &larr; Volver al listado de participantes
+    </.link>
+  </:actions>
+</.header>
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+  <form phx-submit="save-scores">
+    <div class="space-y-6">
+      <%= for criterion <- @criteria do %>
+        <div class="border-b pb-4 mb-4">
+          <h3 class="text-lg font-medium mb-2"><%= criterion.name %></h3>
+          <p class="text-sm text-gray-600 mb-3">
+            <%= if criterion.description, do: criterion.description, else: "Sin descripción" %> 
+            (<%= criterion.max_points %> puntos máximo)
+          </p>
+          
+          <%= if Enum.empty?(criterion.sub_criteria) do %>
+            <div class="mb-3">
+              <.input 
+                type="number" 
+                name={"scores[#{criterion.id}]"}
+                value={@scores_form[criterion.id][:value]}
+                label="Puntuación" 
+                min="0" 
+                max={criterion.max_points}
+                step="0.5"
+              />
+            </div>
+          <% else %>
+            <div class="pl-4 space-y-3">
+              <%= for sub_criterion <- criterion.sub_criteria do %>
+                <div class="mb-2">
+                  <.input 
+                    type="number" 
+                    name={"scores[#{sub_criterion.id}]"}
+                    value={@scores_form[criterion.id][:sub_criteria][sub_criterion.id]}
+                    label={sub_criterion.name} 
+                    min="0" 
+                    max={sub_criterion.max_points}
+                    step="0.5"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    <%= if sub_criterion.description, do: sub_criterion.description, else: "Sin descripción" %> 
+                    (<%= sub_criterion.max_points %> puntos máximo)
+                  </p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      
+      <div class="mt-6">
+        <.button type="submit" class="w-full">Guardar Calificaciones</.button>
+      </div>
+    </div>
+  </form>
+</div>
