@@ -28,7 +28,6 @@
                 label="Puntuación" 
                 min="0" 
                 max={criterion.max_points}
-                step="0.5"
               />
             </div>
           <% else %>
@@ -42,7 +41,6 @@
                     label={sub_criterion.name} 
                     min="0" 
                     max={sub_criterion.max_points}
-                    step="0.5"
                   />
                   <p class="text-xs text-gray-500 mt-1">
                     <%= if sub_criterion.description, do: sub_criterion.description, else: "Sin descripción" %> 
