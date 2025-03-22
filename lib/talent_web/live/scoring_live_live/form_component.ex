@@ -9,7 +9,7 @@ defmodule TalentWeb.ScoringLiveLive.FormComponent do
     <div>
       <.header>
         {@title}
-        <:subtitle>Use this form to manage scoring_live records in your database.</:subtitle>
+        <:subtitle>Usa este formulario para gestionar los scoring_live en tu base de datos.</:subtitle>
       </.header>
 
       <.simple_form
@@ -21,7 +21,7 @@ defmodule TalentWeb.ScoringLiveLive.FormComponent do
       >
         <.input field={@form[:judge_id]} type="number" label="Judge" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Scoring live</.button>
+          <.button phx-disable-with="Guardando...">Guardar Scoring live</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -55,7 +55,7 @@ defmodule TalentWeb.ScoringLiveLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Scoring live updated successfully")
+         |> put_flash(:info, "Scoring live actualizado exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -70,7 +70,7 @@ defmodule TalentWeb.ScoringLiveLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Scoring live created successfully")
+         |> put_flash(:info, "Scoring live creado exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->

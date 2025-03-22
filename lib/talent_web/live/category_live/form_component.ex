@@ -9,7 +9,7 @@ defmodule TalentWeb.CategoryLive.FormComponent do
     <div>
       <.header>
         {@title}
-        <:subtitle>Use this form to manage category records in your database.</:subtitle>
+        <:subtitle>Usa este formulario para gestionar las categorías en tu base de datos.</:subtitle>
       </.header>
 
       <.simple_form
@@ -19,11 +19,11 @@ defmodule TalentWeb.CategoryLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:description]} type="text" label="Description" />
-        <.input field={@form[:max_points]} type="number" label="Max points" />
+        <.input field={@form[:name]} type="text" label="Nombre" />
+        <.input field={@form[:description]} type="text" label="Descripción" />
+        <.input field={@form[:max_points]} type="number" label="Maxima puntuación" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Category</.button>
+          <.button phx-disable-with="Guardando...">Guardar Categoría</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -57,7 +57,7 @@ defmodule TalentWeb.CategoryLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Category updated successfully")
+         |> put_flash(:info, "Categoría actualizada exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -72,7 +72,7 @@ defmodule TalentWeb.CategoryLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Category created successfully")
+         |> put_flash(:info, "Categoría creada exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->

@@ -9,7 +9,7 @@ defmodule TalentWeb.ResultsLiveLive.FormComponent do
     <div>
       <.header>
         {@title}
-        <:subtitle>Use this form to manage results_live records in your database.</:subtitle>
+        <:subtitle>Usa este formulario para gestionar los resultados en tu base de datos.</:subtitle>
       </.header>
 
       <.simple_form
@@ -19,9 +19,9 @@ defmodule TalentWeb.ResultsLiveLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:category_id]} type="number" label="Category" />
+        <.input field={@form[:category_id]} type="number" label="Categoría" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Results live</.button>
+          <.button phx-disable-with="Guardando...">Guardar Resultados</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -55,7 +55,7 @@ defmodule TalentWeb.ResultsLiveLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Results live updated successfully")
+         |> put_flash(:info, "Resultados actualizados exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -70,7 +70,7 @@ defmodule TalentWeb.ResultsLiveLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Results live created successfully")
+         |> put_flash(:info, "Resultados creados exitosamente")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->

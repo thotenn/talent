@@ -5,13 +5,13 @@ defmodule TalentWeb.UserLoginLive do
     ~H"""
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
-        Log in to account
+        Iniciar sesión
         <:subtitle>
-          Don't have an account?
+          No tienes una cuenta?
           <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
-            Sign up
+            Regístrate
           </.link>
-          for an account now.
+          para crear una.
         </:subtitle>
       </.header>
 
@@ -20,14 +20,14 @@ defmodule TalentWeb.UserLoginLive do
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
-          <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
+          <.input field={@form[:remember_me]} type="checkbox" label="Recordarme" />
           <.link href={~p"/users/reset_password"} class="text-sm font-semibold">
-            Forgot your password?
+            Olvidaste tu contraseña?
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Logging in..." class="w-full">
-            Log in <span aria-hidden="true">→</span>
+          <.button phx-disable-with="Iniciando sesión..." class="w-full bg-zinc-900 hover:bg-zinc-700">
+            Iniciar sesión <span aria-hidden="true">→</span>
           </.button>
         </:actions>
       </.simple_form>

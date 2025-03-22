@@ -16,6 +16,6 @@ defmodule TalentWeb.CategoryLive.Show do
      |> assign(:category, Competitions.get_category!(id))}
   end
 
-  defp page_title(:show), do: "Show Category"
-  defp page_title(:edit), do: "Edit Category"
+  defp page_title(:show), do: "Ver Categoría"
+  defp page_title(:edit), do: "Editar Categoría"
 end

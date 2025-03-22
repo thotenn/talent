@@ -8,13 +8,13 @@ defmodule TalentWeb.UserRegistrationLive do
     ~H"""
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
-        Register for an account
+        Regístrate
         <:subtitle>
-          Already registered?
+          Ya tienes una cuenta?
           <.link navigate={~p"/users/log_in"} class="font-semibold text-brand hover:underline">
-            Log in
+            Iniciar sesión
           </.link>
-          to your account now.
+          para iniciar sesión.
         </:subtitle>
       </.header>
 
@@ -28,14 +28,14 @@ defmodule TalentWeb.UserRegistrationLive do
         method="post"
       >
         <.error :if={@check_errors}>
-          Oops, something went wrong! Please check the errors below.
+          Ups, algo salió mal! Por favor, verifica los errores abajo.
         </.error>
 
         <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
+        <.input field={@form[:password]} type="password" label="Contraseña" required />
 
         <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+          <.button phx-disable-with="Creando cuenta..." class="w-full bg-zinc-900 hover:bg-zinc-700">Crear cuenta</.button>
         </:actions>
       </.simple_form>
     </div>
