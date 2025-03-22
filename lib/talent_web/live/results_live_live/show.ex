@@ -77,16 +77,12 @@ defmodule TalentWeb.ResultsLive.Show do
   def handle_info({:score_updated, %{category_id: updated_category_id}}, socket) do
     # Solo actualizar si la categoría actualizada es la que estamos viendo
     if updated_category_id == socket.assigns.category_id do
-      IO.puts("thotenn.Actualizando resultados para categoría: #{socket.assigns.category_id}")
       # Recalcular los resultados con los datos actualizados
       participants = Competitions.list_participants_by_category(socket.assigns.category_id)
       judges = Competitions.list_judges_by_category(socket.assigns.category_id)
       criteria = Scoring.list_root_scoring_criteria_by_category(socket.assigns.category_id)
 
       updated_results = calculate_results(participants, judges, criteria)
-
-
-      IO.inspect(updated_results, label: "Resultados actualizados")
 
       {:noreply, assign(socket, :results, updated_results)}
     else
