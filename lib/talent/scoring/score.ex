@@ -3,7 +3,7 @@ defmodule Talent.Scoring.Score do
   import Ecto.Changeset
 
   schema "scores" do
-    field :value, :float
+    field :value, :integer
 
     belongs_to :judge, Talent.Competitions.Judge
     belongs_to :participant, Talent.Competitions.Participant

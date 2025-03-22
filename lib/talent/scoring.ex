@@ -367,6 +367,22 @@ end
             s.participant_id == ^attrs.participant_id and
             s.criterion_id == ^attrs.criterion_id
 
+    # Convertir el valor a entero si viene como string
+    attrs = if is_binary(attrs.value) do
+      # Primero intentamos convertir a float y luego a entero
+      # Esto es útil si tienes valores como "8.5" que deberían convertirse a 8 o 9
+      value =
+        case Float.parse(attrs.value) do
+          {float_val, _} -> round(float_val)
+          :error -> 0 # valor por defecto si no se puede convertir
+        end
+      Map.put(attrs, :value, value)
+    else
+      # Si ya es un entero o float, nos aseguramos de que sea entero
+      value = if is_float(attrs.value), do: round(attrs.value), else: attrs.value
+      Map.put(attrs, :value, value)
+    end
+
     case Repo.one(score_query) do
       nil ->
         %Score{}
