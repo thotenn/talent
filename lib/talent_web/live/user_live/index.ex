@@ -49,4 +49,22 @@ defmodule TalentWeb.UserLive.Index do
 
     {:noreply, stream_insert(socket, :users, updated_user)}
   end
+
+  @impl true
+  def handle_event("deactivate_user", %{"id" => id}, socket) do
+    user = Accounts.get_user!(id)
+
+    case Accounts.deactivate_user(user) do
+      {:ok, updated_user} ->
+        {:noreply,
+        socket
+        |> put_flash(:info, "Usuario desactivado correctamente.")
+        |> stream_insert(:users, updated_user)}
+
+      {:error, _} ->
+        {:noreply,
+        socket
+        |> put_flash(:error, "No se pudo desactivar el usuario.")}
+    end
+  end
 end

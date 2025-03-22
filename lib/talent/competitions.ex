@@ -381,6 +381,10 @@ defmodule Talent.Competitions do
 
   """
   def delete_participant(%Participant{} = participant) do
+    # First delete all scores associated with this participant
+    Repo.delete_all(from s in Talent.Scoring.Score, where: s.participant_id == ^participant.id)
+
+    # Now it's safe to delete the participant
     Repo.delete(participant)
   end
 

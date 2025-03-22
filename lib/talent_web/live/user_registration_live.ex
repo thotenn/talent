@@ -62,8 +62,11 @@ defmodule TalentWeb.UserRegistrationLive do
             &url(~p"/users/confirm/#{&1}")
           )
 
-        changeset = Accounts.change_user_registration(user)
-        {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+        # Ahora en lugar de usar trigger_submit: true, vamos a redirigir manualmente
+        {:noreply,
+          socket
+          |> put_flash(:info, "Tu registro se ha enviado correctamente. Un administrador revisará tu solicitud para su aprobación.")
+          |> redirect(to: ~p"/users/log_in")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}

@@ -147,7 +147,7 @@ defmodule TalentWeb.CoreComponents do
   def flash_group(assigns) do
     ~H"""
     <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
+      <.flash kind={:info} title={gettext("Genial!")} flash={@flash} />
       <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
       <.flash
         id="client-error"
@@ -231,9 +231,9 @@ defmodule TalentWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
+        @class || "bg-zinc-900 hover:bg-zinc-700"  # Usa la clase personalizada o la predeterminada
       ]}
       {@rest}
     >
@@ -594,6 +594,57 @@ defmodule TalentWeb.CoreComponents do
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  @doc """
+  Renders an SVG icon from the assets/css/icons directory with an optional tooltip.
+
+  ## Examples
+
+      <.svgicon name="eye" class="w-4 h-4" />
+      <.svgicon name="pen" class="w-4 h-4" title="Edit item" />
+  """
+  attr :name, :string, required: true, doc: "the name of the SVG icon file (without extension)"
+  attr :class, :string, default: "h-4 w-4 inline-block", doc: "the optional CSS class to add to the svg tag"
+  attr :title, :string, default: nil, doc: "optional tooltip text to display on hover"
+  attr :tooltip_class, :string, default: "bg-gray-800", doc: "optional class for the tooltip background"
+  attr :rest, :global, doc: "additional HTML attributes to add to the svg tag"
+
+  def svgicon(assigns) when is_binary(assigns.name) do
+    project_root = File.cwd!()
+    svg_path = Path.join([project_root, "assets", "css", "icons", "#{assigns.name}.svg"])
+    svg_content = File.read!(svg_path)
+
+    # Clean SVG content and add classes
+    svg_with_class = svg_content
+      |> String.replace("<svg", "<svg class=\"#{assigns.class}\"")
+      |> String.replace("fill=\"none\"", "")
+      |> String.replace("fill=\"currentColor\"", "")
+      # Add currentColor to allow text color classes to work
+      |> String.replace("<path", "<path fill=\"currentColor\"")
+
+    # Process the rest of the attributes
+    rest_attrs = assigns_to_attributes(assigns, [:name, :class, :title, :tooltip_class])
+
+    # Prepare the SVG with classes
+    assigns = assign(assigns, :svg_html, Phoenix.HTML.raw(svg_with_class))
+    assigns = assign(assigns, :rest, rest_attrs)
+
+    ~H"""
+    <div class="relative inline-block hover:cursor-pointer tooltip-container">
+      <%= @svg_html %>
+      <%= if @title do %>
+        <div class={["tooltip-text absolute -top-8 left-1/2 -translate-x-1/2 hidden text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10", @tooltip_class]}>
+          <%= @title %>
+        </div>
+      <% end %>
+      <style>
+        .tooltip-container:hover .tooltip-text {
+          display: block;
+        }
+      </style>
+    </div>
     """
   end
 

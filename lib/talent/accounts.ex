@@ -41,7 +41,11 @@ defmodule Talent.Accounts do
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: email)
-    if User.valid_password?(user, password), do: user
+    if User.valid_password?(user, password) && user.confirmed_at != nil do
+      user
+    else
+      nil
+    end
   end
 
   ## User registration
@@ -62,21 +66,14 @@ defmodule Talent.Accounts do
     %User{}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
-    |> case do
-      {:ok, user} ->
-        # Confirmar automáticamente el usuario
-        {:ok, _} = confirm_user_automatically(user)
-        {:ok, user}
-      error -> error
-    end
   end
 
-  defp confirm_user_automatically(user) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    user
-    |> Ecto.Changeset.change(confirmed_at: now)
-    |> Repo.update()
-  end
+  # defp confirm_user_automatically(user) do
+  #   now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  #   user
+  #   |> Ecto.Changeset.change(confirmed_at: now)
+  #   |> Repo.update()
+  # end
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
@@ -461,5 +458,14 @@ defmodule Talent.Accounts do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
+  end
+
+  @doc """
+  Desactiva un usuario estableciendo confirmed_at a nil.
+  """
+  def deactivate_user(%User{} = user) do
+    user
+    |> Ecto.Changeset.change(confirmed_at: nil)
+    |> Repo.update()
   end
 end
