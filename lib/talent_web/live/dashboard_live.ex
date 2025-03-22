@@ -1,8 +1,8 @@
 defmodule TalentWeb.DashboardLive do
   use TalentWeb, :live_view
 
-  # alias Talent.Dashboard
-  # alias Talent.Dashboard.DashboardInfo
+  alias Talent.Competitions
+  alias Talent.Repo
 
   on_mount {TalentWeb.UserAuth, :ensure_authenticated}
 
@@ -10,10 +10,22 @@ defmodule TalentWeb.DashboardLive do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
+    # Verificar si el usuario es un juez y tiene acceso a resultados
+    has_scores_access = if current_user.role == "jurado" do
+      case Competitions.get_judge_by_user_id(current_user.id) do
+        nil -> false
+        judge -> judge.scores_access
+      end
+    else
+      # Para otros roles (admin, escribana, secretario) siempre true
+      true
+    end
+
     {:ok,
      assign(socket,
        page_title: "Dashboard",
-       user_role: current_user.role
+       user_role: current_user.role,
+       has_scores_access: has_scores_access
      )}
   end
 
@@ -85,13 +97,15 @@ defmodule TalentWeb.DashboardLive do
                   <div class="text-xl mb-2">⭐</div>
                   <div class="font-medium">Calificar Participantes</div>
                 </.link>
-                <.link
-                  navigate={~p"/notary/results"}
-                  class="bg-indigo-100 hover:bg-indigo-200 p-4 rounded-lg text-center"
-                >
-                  <div class="text-xl mb-2">📊</div>
-                  <div class="font-medium">Ver Resultados</div>
-                </.link>
+                <%= if @has_scores_access do %>
+                  <.link
+                    navigate={~p"/notary/results"}
+                    class="bg-indigo-100 hover:bg-indigo-200 p-4 rounded-lg text-center"
+                  >
+                    <div class="text-xl mb-2">📊</div>
+                    <div class="font-medium">Ver Resultados</div>
+                  </.link>
+                <% end %>
               </div>
             <% "secretario" -> %>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">

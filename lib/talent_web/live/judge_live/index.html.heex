@@ -1,61 +1,72 @@
 <.header>
-    Gestión de Jueces
-    <:actions>
-      <.link patch={~p"/admin/judges/new"}>
-        <.button>Nuevo Juez</.button>
-      </.link>
-    </:actions>
-  </.header>
-  
-  <.table
-    id="judges"
-    rows={@streams.judges}
-    row_click={fn {_id, judge} -> JS.navigate(~p"/admin/judges/#{judge}") end}
-  >
-    <:col :let={{_id, judge}} label="Nombre">{judge.name}</:col>
-    <:col :let={{_id, judge}} label="Usuario">{judge.user.email}</:col>
-    <:col :let={{_id, judge}} label="Categorías Asignadas">
-      <div class="flex flex-wrap gap-1">
-        <%= for category <- judge.categories do %>
-          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <%= category.name %>
-          </span>
-        <% end %>
-        
-        <%= if Enum.empty?(judge.categories) do %>
-          <span class="text-gray-500 italic">Sin categorías asignadas</span>
-        <% end %>
-      </div>
-    </:col>
-    <:action :let={{_id, judge}}>
-      <div class="sr-only">
-        <.link navigate={~p"/admin/judges/#{judge}"}>Ver</.link>
-      </div>
-      <.link patch={~p"/admin/judges/#{judge}/edit"}>
-        <.svgicon_update />
-      </.link>
-    </:action>
-    <:action :let={{_id, judge}}>
-      <.link
-        phx-click={JS.push("delete", value: %{id: judge.id}) |> hide("##{_id}")}
-        data-confirm="¿Estás seguro de eliminar este juez?"
-      >
-        <.svgicon_delete />
-      </.link>
-    </:action>
-    <:action :let={{_id, judge}}>
-      <.link navigate={~p"/admin/judges/#{judge}/assign_categories"} class="text-blue-600 hover:text-blue-800">
-        Asignar Categorías
-      </.link>
-    </:action>
-  </.table>
-  <.modal :if={@live_action in [:new, :edit]} id="judge-modal" show on_cancel={JS.patch(~p"/admin/judges")}>
-    <.live_component
-      module={TalentWeb.JudgeLive.FormComponent}
-      id={@judge.id || :new}
-      title={@page_title}
-      action={@live_action}
-      judge={@judge}
-      patch={~p"/admin/judges"}
-    />
-  </.modal>
+  Gestión de Jueces
+  <:actions>
+    <.link patch={~p"/admin/judges/new"}>
+      <.button>Nuevo Juez</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="judges"
+  rows={@streams.judges}
+  row_click={fn {_id, judge} -> JS.navigate(~p"/admin/judges/#{judge}") end}
+>
+  <:col :let={{_id, judge}} label="Nombre">{judge.name}</:col>
+  <:col :let={{_id, judge}} label="Usuario">{judge.user.email}</:col>
+  <:col :let={{_id, judge}} label="Acceso a Resultados">
+    <%= if judge.scores_access do %>
+      <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+        Habilitado
+      </span>
+    <% else %>
+      <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+        Deshabilitado
+      </span>
+    <% end %>
+  </:col>
+  <:col :let={{_id, judge}} label="Categorías Asignadas">
+    <div class="flex flex-wrap gap-1">
+      <%= for category <- judge.categories do %>
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <%= category.name %>
+        </span>
+      <% end %>
+      
+      <%= if Enum.empty?(judge.categories) do %>
+        <span class="text-gray-500 italic">Sin categorías asignadas</span>
+      <% end %>
+    </div>
+  </:col>
+  <:action :let={{_id, judge}}>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/judges/#{judge}"}>Ver</.link>
+    </div>
+    <.link patch={~p"/admin/judges/#{judge}/edit"}>
+      <.svgicon_update />
+    </.link>
+  </:action>
+  <:action :let={{_id, judge}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: judge.id}) |> hide("##{_id}")}
+      data-confirm="¿Estás seguro de eliminar este juez?"
+    >
+      <.svgicon_delete />
+    </.link>
+  </:action>
+  <:action :let={{_id, judge}}>
+    <.link navigate={~p"/admin/judges/#{judge}/assign_categories"} class="text-blue-600 hover:text-blue-800">
+      Asignar Categorías
+    </.link>
+  </:action>
+</.table>
+<.modal :if={@live_action in [:new, :edit]} id="judge-modal" show on_cancel={JS.patch(~p"/admin/judges")}>
+  <.live_component
+    module={TalentWeb.JudgeLive.FormComponent}
+    id={@judge.id || :new}
+    title={@page_title}
+    action={@live_action}
+    judge={@judge}
+    patch={~p"/admin/judges"}
+  />
+</.modal>

@@ -21,6 +21,7 @@ defmodule TalentWeb.JudgeLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Nombre" />
         <.input field={@form[:user_id]} type="select" label="Usuario" options={@users_options} />
+        <.input field={@form[:scores_access]} type="checkbox" label="Acceso a resultados en tiempo real" />
 
         <:actions>
           <.button phx-disable-with="Guardando...">Guardar Juez</.button>

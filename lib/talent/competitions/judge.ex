@@ -4,6 +4,7 @@ defmodule Talent.Competitions.Judge do
 
   schema "judges" do
     field :name, :string
+    field :scores_access, :boolean, default: false
 
     belongs_to :user, Talent.Accounts.User
     many_to_many :categories, Talent.Competitions.Category, join_through: Talent.Competitions.CategoryJudge
@@ -15,7 +16,7 @@ defmodule Talent.Competitions.Judge do
   @doc false
   def changeset(judge, attrs) do
     judge
-    |> cast(attrs, [:name, :user_id])
+    |> cast(attrs, [:name, :user_id, :scores_access])
     |> validate_required([:name, :user_id])
     |> unique_constraint(:user_id)
   end

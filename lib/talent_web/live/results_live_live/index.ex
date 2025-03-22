@@ -16,9 +16,17 @@ defmodule TalentWeb.ResultsLive.Index do
         judge = Competitions.get_judge_by_user_id(current_user.id)
 
         if judge do
-          # Obtener las categorías asignadas a este juez
-          judge = Repo.preload(judge, :categories)
-          judge.categories
+          # Verificar si el juez tiene acceso a los resultados
+          if judge.scores_access do
+            # Obtener las categorías asignadas a este juez
+            judge = Repo.preload(judge, :categories)
+            judge.categories
+          else
+            socket = socket
+              |> put_flash(:error, "No tienes acceso a ver los resultados en tiempo real. Contacta al administrador.")
+              |> redirect(to: ~p"/")
+            []
+          end
         else
           # Si no hay juez asignado, devolver lista vacía
           []

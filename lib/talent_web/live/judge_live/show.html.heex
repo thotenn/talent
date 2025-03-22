@@ -11,6 +11,17 @@
   <.list>
     <:item title="Nombre"><%= @judge.name %></:item>
     <:item title="Email"><%= @judge.user.email %></:item>
+    <:item title="Acceso a Resultados">
+      <%= if @judge.scores_access do %>
+        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+          Habilitado
+        </span>
+      <% else %>
+        <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+          Deshabilitado
+        </span>
+      <% end %>
+    </:item>
   </.list>
 </div>
 
