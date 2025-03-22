@@ -16,6 +16,6 @@ defmodule TalentWeb.ParticipantLive.Show do
      |> assign(:participant, Competitions.get_participant!(id))}
   end
 
-  defp page_title(:show), do: "Show Participant"
-  defp page_title(:edit), do: "Edit Participant"
+  defp page_title(:show), do: "Mostrar Participante"
+  defp page_title(:edit), do: "Editar Participante"
 end

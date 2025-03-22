@@ -233,6 +233,7 @@ defmodule TalentWeb.CoreComponents do
       class={[
         "phx-submit-loading:opacity-75 rounded-lg py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "inline-block", # Ensure button is visible
         @class || "bg-zinc-900 hover:bg-zinc-700"  # Usa la clase personalizada o la predeterminada
       ]}
       {@rest}
@@ -645,6 +646,48 @@ defmodule TalentWeb.CoreComponents do
         }
       </style>
     </div>
+    """
+  end
+
+  @doc """
+  Renders an SVG icon for updating an item with an optional tooltip.
+
+  ## Examples
+
+      <.svgicon_watch title="Ver" />
+  """
+  attr :title, :string, default: "Ver"
+  def svgicon_watch(assigns) do
+    ~H"""
+    <.svgicon name="eye" class="h-6 w-6 text-sky-700 hover:text-sky-800" tooltip_class="bg-sky-800" title={@title} aria-hidden="true" />
+    """
+  end
+
+  @doc """
+  Renders an SVG icon for updating an item with an optional tooltip.
+
+  ## Examples
+
+      <.svgicon_update title="Editar" />
+  """
+  attr :title, :string, default: "Editar"
+  def svgicon_update(assigns) do
+    ~H"""
+    <.svgicon name="pen" class="h-6 w-6 text-yellow-500 hover:text-yellow-700" tooltip_class="bg-yellow-700" title={@title} aria-hidden="true" />
+    """
+  end
+
+  @doc """
+  Renders an SVG icon for deleting an item with an optional tooltip.
+
+  ## Examples
+
+      <.svgicon_delete title="Eliminar" />
+  """
+  attr :title, :string, default: "Eliminar"
+  def svgicon_delete(assigns) do
+    ~H"""
+    <.svgicon name="trash" class="h-6 w-6 text-rose-700 hover:text-rose-900" title={@title} tooltip_class="bg-rose-800" aria-hidden="true" />
     """
   end
 

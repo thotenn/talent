@@ -6,8 +6,8 @@ defmodule TalentWeb.UserSettingsLive do
   def render(assigns) do
     ~H"""
     <.header class="text-center">
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
+      Configuración
+      <:subtitle>Administra tu dirección de correo electrónico y contraseña</:subtitle>
     </.header>
 
     <div class="space-y-12 divide-y">
@@ -29,7 +29,7 @@ defmodule TalentWeb.UserSettingsLive do
             required
           />
           <:actions>
-            <.button phx-disable-with="Changing...">Change Email</.button>
+            <.button phx-disable-with="Changing...">Cambiar Email</.button>
           </:actions>
         </.simple_form>
       </div>
@@ -65,7 +65,7 @@ defmodule TalentWeb.UserSettingsLive do
             required
           />
           <:actions>
-            <.button phx-disable-with="Changing...">Change Password</.button>
+            <.button phx-disable-with="Changing...">Cambiar Contraseña</.button>
           </:actions>
         </.simple_form>
       </div>

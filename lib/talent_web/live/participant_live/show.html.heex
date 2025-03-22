@@ -1,18 +1,17 @@
 <.header>
-  Participant {@participant.id}
-  <:subtitle>This is a participant record from your database.</:subtitle>
+  Participante {@participant.id}
   <:actions>
     <.link patch={~p"/secretary/participants/#{@participant}/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit participant</.button>
+      <.button>Editar participante</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
-  <:item title="Name">{@participant.name}</:item>
+  <:item title="Nombre">{@participant.name}</:item>
 </.list>
 
-<.back navigate={~p"/secretary/participants"}>Back to participants</.back>
+<.back navigate={~p"/secretary/participants"}>Volver a participantes</.back>
 
 <.modal :if={@live_action == :edit} id="participant-modal" show on_cancel={JS.patch(~p"/secretary/participants/#{@participant}")}>
   <.live_component

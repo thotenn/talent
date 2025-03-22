@@ -22,5 +22,6 @@ defmodule Talent.Scoring.ScoringCriterion do
     |> validate_required([:name, :category_id])
     |> foreign_key_constraint(:category_id)
     |> foreign_key_constraint(:parent_id)
+    |> foreign_key_constraint(:id, name: "scores_criterion_id_fkey", message: "No se puede eliminar el criterio porque hay puntuaciones asociadas")
   end
 end

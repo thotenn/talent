@@ -10,7 +10,7 @@ defmodule TalentWeb.ScoringCriterionLive.Index do
     categories = Competitions.list_categories() |> Enum.map(fn c -> {c.name, c.id} end)
 
     {:ok, socket
-      |> stream(:scoring_criteria, Scoring.list_scoring_criteria())
+      |> stream(:scoring_criteria, Scoring.list_scoring_criteria(), reset: true)
       |> assign(:categories, categories)
     }
   end
@@ -46,8 +46,20 @@ defmodule TalentWeb.ScoringCriterionLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     criterion = Scoring.get_scoring_criterion!(id)
-    {:ok, _} = Scoring.delete_scoring_criterion(criterion)
 
-    {:noreply, stream_delete(socket, :scoring_criteria, criterion)}
+    # Intenta eliminar el criterio
+    case Scoring.delete_scoring_criterion(criterion) do
+      {:ok, _} ->
+        # La eliminación fue exitosa
+        {:noreply, stream_delete(socket, :scoring_criteria, criterion)}
+
+      {:error, _} ->
+        # Hubo un error, recarga los datos
+        {:noreply,
+        socket
+        |> put_flash(:error, "No se puede eliminar este criterio porque tiene subcriterios o puntuaciones asociadas.")
+        |> stream(:scoring_criteria, Scoring.list_scoring_criteria(), reset: true)
+        }
+    end
   end
 end

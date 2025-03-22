@@ -18,14 +18,16 @@
     <div class="sr-only">
       <.link navigate={~p"/admin/categories/#{category}"}>Ver</.link>
     </div>
-    <.link patch={~p"/admin/categories/#{category}/edit"}>Editar</.link>
+    <.link patch={~p"/admin/categories/#{category}/edit"}> 
+      <.svgicon_update />
+    </.link>
   </:action>
   <:action :let={{id, category}}>
-    <.link
+    <.link 
       phx-click={JS.push("delete", value: %{id: category.id}) |> hide("##{id}")}
       data-confirm="¿Estás seguro de que deseas eliminar esta categoría?"
     >
-      Eliminar
+      <.svgicon_delete />
     </.link>
   </:action>
 </.table>

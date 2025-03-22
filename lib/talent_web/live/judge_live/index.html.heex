@@ -31,19 +31,21 @@
       <div class="sr-only">
         <.link navigate={~p"/admin/judges/#{judge}"}>Ver</.link>
       </div>
-      <.link patch={~p"/admin/judges/#{judge}/edit"}>Editar</.link>
+      <.link patch={~p"/admin/judges/#{judge}/edit"}>
+        <.svgicon_update />
+      </.link>
     </:action>
     <:action :let={{_id, judge}}>
       <.link
         phx-click={JS.push("delete", value: %{id: judge.id}) |> hide("##{_id}")}
         data-confirm="¿Estás seguro de eliminar este juez?"
       >
-        Eliminar
+        <.svgicon_delete />
       </.link>
     </:action>
     <:action :let={{_id, judge}}>
       <.link navigate={~p"/admin/judges/#{judge}/assign_categories"} class="text-blue-600 hover:text-blue-800">
-        Gestionar Categorías
+        Asignar Categorías
       </.link>
     </:action>
   </.table>

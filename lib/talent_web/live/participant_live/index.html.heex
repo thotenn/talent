@@ -16,17 +16,19 @@
     <%= participant.category_name %>
   </:col>
   <:action :let={{_id, participant}}>
-    <div class="sr-only">
-      <.link navigate={~p"/secretary/participants/#{participant}"}>Ver</.link>
-    </div>
-    <.link patch={~p"/secretary/participants/#{participant}/edit"}>Editar</.link>
+    <.link navigate={~p"/secretary/participants/#{participant}"} class="pr-2">
+      <.svgicon_watch />
+    </.link>
+    <.link patch={~p"/secretary/participants/#{participant}/edit"}> 
+      <.svgicon_update />
+    </.link>
   </:action>
   <:action :let={{id, participant}}>
     <.link
       phx-click={JS.push("delete", value: %{id: participant.id}) |> hide("##{id}")}
       data-confirm="¿Estás seguro de que deseas eliminar este participante?"
     >
-      Eliminar
+      <.svgicon_delete title="Eliminar" />
     </.link>
   </:action>
 </.table>

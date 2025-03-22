@@ -98,7 +98,26 @@ end
 
   """
   def delete_scoring_criterion(%ScoringCriterion{} = scoring_criterion) do
-    Repo.delete(scoring_criterion)
+    # First check if there are any sub-criteria
+    sub_criteria_count =
+      from(sc in ScoringCriterion, where: sc.parent_id == ^scoring_criterion.id)
+      |> Repo.aggregate(:count, :id)
+
+    if sub_criteria_count > 0 do
+      {:error, "No se puede eliminar el criterio porque tiene subcriterios asociados"}
+    else
+      # Check if there are scores associated with this criterion
+      scores_count =
+        from(s in Talent.Scoring.Score, where: s.criterion_id == ^scoring_criterion.id)
+        |> Repo.aggregate(:count, :id)
+
+      if scores_count > 0 do
+        {:error, "No se puede eliminar el criterio porque hay puntuaciones asociadas"}
+      else
+        # It's safe to delete the criterion
+        Repo.delete(scoring_criterion)
+      end
+    end
   end
 
   @doc """

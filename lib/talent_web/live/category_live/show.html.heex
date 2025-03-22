@@ -1,20 +1,20 @@
 <.header>
-  Category {@category.id}
-  <:subtitle>This is a category record from your database.</:subtitle>
+  Categoría {@category.id}
+  <:subtitle>Esta es una categoría de tu base de datos.</:subtitle>
   <:actions>
     <.link patch={~p"/admin/categories/#{@category}/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit category</.button>
+      <.button>Editar categoría</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
-  <:item title="Name">{@category.name}</:item>
-  <:item title="Description">{@category.description}</:item>
-  <:item title="Max points">{@category.max_points}</:item>
+  <:item title="Nombre">{@category.name}</:item>
+  <:item title="Descripción">{@category.description}</:item>
+  <:item title="Maxima puntuación">{@category.max_points}</:item>
 </.list>
 
-<.back navigate={~p"/admin/categories"}>Back to categories</.back>
+<.back navigate={~p"/admin/categories"}>Volver a categorias</.back>
 
 <.modal :if={@live_action == :edit} id="category-modal" show on_cancel={JS.patch(~p"/admin/categories/#{@category}")}>
   <.live_component

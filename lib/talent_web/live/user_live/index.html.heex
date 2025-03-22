@@ -20,18 +20,18 @@
     <div class="flex items-center space-x-2">
       <%= if is_nil(user.confirmed_at) do %>
         <.link phx-click="confirm_user" phx-value-id={user.id}>
-          <.svgicon name="power-off" class="h-5 w-5 text-lime-600" title="Activar" tooltip_class="bg-lime-600" aria-hidden="true" />
+          <.svgicon name="power-off" class="h-6 w-6 text-lime-600" title="Activar" tooltip_class="bg-lime-600" aria-hidden="true" />
         </.link>
       <% else %>
         <.link phx-click="deactivate_user" phx-value-id={user.id}>
-          <.svgicon name="trash" class="h-5 w-5 text-rose-700 hover:text-rose-900" title="Desactivar" tooltip_class="bg-rose-800" aria-hidden="true" />
+          <.svgicon_delete title="Desactivar" />
         </.link>
       <% end %>
       <.link navigate={~p"/admin/users/#{user}"}>
-        <.svgicon name="eye" class="h-5 w-5 text-sky-700 hover:text-sky-900" tooltip_class="bg-sky-800" title="Ver" aria-hidden="true" />
+        <.svgicon_watch />
       </.link>
       <.link patch={~p"/admin/users/#{user}/edit"}> 
-        <.svgicon name="pen" class="h-5 w-5 text-yellow-500 hover:text-yellow-700" tooltip_class="bg-yellow-700" title="Editar" aria-hidden="true" />
+        <.svgicon_update />
       </.link>
     </div>
   </:action>

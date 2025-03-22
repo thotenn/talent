@@ -24,14 +24,16 @@
     <div class="sr-only">
       <.link navigate={~p"/admin/scoring_criteria/#{criterion}"}>Ver</.link>
     </div>
-    <.link patch={~p"/admin/scoring_criteria/#{criterion}/edit"}>Editar</.link>
+    <.link patch={~p"/admin/scoring_criteria/#{criterion}/edit"}> 
+      <.svgicon_update />
+    </.link>
   </:action>
   <:action :let={{id, criterion}}>
     <.link
-      phx-click={JS.push("delete", value: %{id: criterion.id}) |> hide("##{id}")}
+      phx-click={JS.push("delete", value: %{id: criterion.id})}
       data-confirm="¿Estás seguro de que deseas eliminar este criterio?"
     >
-      Eliminar
+      <.svgicon_delete />
     </.link>
   </:action>
 </.table>
