@@ -25,6 +25,13 @@ defmodule TalentWeb.Endpoint do
     gzip: false,
     only: TalentWeb.static_paths()
 
+  # Añadir un Plug.Static específico para el service-worker.js con headers personalizados
+  plug Plug.Static,
+    at: "/service-worker.js",
+    from: {:talent, "priv/static/service-worker.js"},
+    gzip: false,
+    headers: %{"cache-control" => "no-cache"}
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

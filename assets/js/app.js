@@ -17,6 +17,7 @@
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
+import "./install.js"
 // Establish Phoenix Socket and LiveView configuration.
 import Hooks from "./hooks"
 import {Socket} from "phoenix"
@@ -44,3 +45,12 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Script para gestionar las actualizaciones del Service Worker
+if ('serviceWorker' in navigator) {
+  let refreshing;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+}
