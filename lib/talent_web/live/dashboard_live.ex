@@ -2,7 +2,6 @@ defmodule TalentWeb.DashboardLive do
   use TalentWeb, :live_view
 
   alias Talent.Competitions
-  alias Talent.Repo
 
   on_mount {TalentWeb.UserAuth, :ensure_authenticated}
 

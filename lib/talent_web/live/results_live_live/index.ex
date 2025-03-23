@@ -22,9 +22,9 @@ defmodule TalentWeb.ResultsLive.Index do
             judge = Repo.preload(judge, :categories)
             judge.categories
           else
-            socket = socket
-              |> put_flash(:error, "No tienes acceso a ver los resultados en tiempo real. Contacta al administrador.")
-              |> redirect(to: ~p"/")
+            # Redirigir y mostrar mensaje de error, pero continuar con lista vacía
+            send(self(), {:flash_and_redirect, socket, :error,
+              "No tienes acceso a ver los resultados en tiempo real. Contacta al administrador."})
             []
           end
         else
@@ -50,5 +50,14 @@ defmodule TalentWeb.ResultsLive.Index do
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Resultados de la Competencia")
+  end
+
+  # Manejador para el mensaje flash_and_redirect
+  @impl true
+  def handle_info({:flash_and_redirect, socket, level, message}, _socket) do
+    {:noreply,
+      socket
+      |> put_flash(level, message)
+      |> redirect(to: ~p"/")}
   end
 end

@@ -157,7 +157,7 @@ defmodule TalentWeb.UserAuth do
     else
       socket =
         socket
-        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.put_flash(:error, "Necesitas iniciar sesión para acceder a esta página.")
         |> Phoenix.LiveView.redirect(to: ~p"/users/log_in")
 
       {:halt, socket}
@@ -206,7 +206,7 @@ defmodule TalentWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You must log in to access this page.")
+      |> put_flash(:error, "Necesitas iniciar sesión para acceder a esta página.")
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log_in")
       |> halt()
@@ -218,7 +218,7 @@ defmodule TalentWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You need administrator privileges to access this page.")
+      |> put_flash(:error, "Necesitas permisos de administrador para acceder a esta página.")
       |> redirect(to: ~p"/")
       |> halt()
     end
@@ -229,7 +229,7 @@ defmodule TalentWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You need jury privileges to access this page.")
+      |> put_flash(:error, "Necesitas permisos de jurado para acceder a esta página.")
       |> redirect(to: ~p"/")
       |> halt()
     end
@@ -241,7 +241,7 @@ defmodule TalentWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You need secretary privileges to access this page.")
+      |> put_flash(:error, "Necesitas permisos de secretario para acceder a esta página.")
       |> redirect(to: ~p"/")
       |> halt()
     end
@@ -253,7 +253,7 @@ defmodule TalentWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You need notary privileges to access this page.")
+      |> put_flash(:error, "Necesitas permisos de notario para acceder a esta página.")
       |> redirect(to: ~p"/")
       |> halt()
     end
