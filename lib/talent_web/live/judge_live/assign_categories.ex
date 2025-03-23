@@ -89,16 +89,51 @@ defmodule TalentWeb.JudgeLive.AssignCategories do
     is_assigned = Map.get(socket.assigns.assigned_criteria, criterion_id, false)
 
     # Asignar o desasignar según corresponda
-    {new_assigned, msg} = if is_assigned do
-      Scoring.unassign_criterion_from_judge(judge.id, criterion_id, category_id)
-      {Map.delete(socket.assigns.assigned_criteria, criterion_id), "Criterio eliminado del juez"}
+    {_updated_assigned, msg} = if is_assigned do
+      # Desasignar el criterio (usando la función actualizada que elimina puntuaciones)
+      result = Scoring.unassign_criterion_from_judge(judge.id, criterion_id, category_id)
+
+      # Actualizar el mapa de criterios asignados
+      new_assigned = Map.delete(socket.assigns.assigned_criteria, criterion_id)
+
+      # Mensaje informativo que incluye el número de puntuaciones eliminadas
+      {new_assigned, "Criterio eliminado del juez. Se eliminaron #{result.deleted_scores} puntuaciones relacionadas."}
     else
-      Scoring.assign_criterion_to_judge(judge.id, criterion_id, category_id)
-      {Map.put(socket.assigns.assigned_criteria, criterion_id, true), "Criterio asignado al juez"}
+      # Asignar el criterio y sus padres automáticamente
+      result = Scoring.assign_criterion_to_judge(judge.id, criterion_id, category_id)
+
+      case result do
+        {:ok, _record} ->
+          # Obtener los padres para informar al usuario
+          parent_criteria = Scoring.get_all_parent_criteria(criterion_id)
+          parent_names = Enum.map(parent_criteria, & &1.name)
+
+          # Actualizar el assigned_criteria para todos los padres también
+          updated_map = Map.put(socket.assigns.assigned_criteria, criterion_id, true)
+          updated_map = Enum.reduce(parent_criteria, updated_map, fn parent, acc ->
+            Map.put(acc, parent.id, true)
+          end)
+
+          # Mensaje informativo
+          parent_msg = if Enum.empty?(parent_names) do
+            ""
+          else
+            " También se asignaron automáticamente los siguientes criterios padre: #{Enum.join(parent_names, ", ")}."
+          end
+
+          {updated_map, "Criterio asignado al juez.#{parent_msg}"}
+
+        {:error, changeset} ->
+          # En caso de error, mantener el mismo mapa y mostrar error
+          {socket.assigns.assigned_criteria, "Error al asignar criterio: #{inspect(changeset.errors)}"}
+      end
     end
 
+    # Volver a cargar los criterios asignados para reflejar todos los cambios
+    assigned_criteria = get_assigned_criteria_map(judge.id, category_id, socket.assigns.criteria_for_category)
+
     {:noreply, socket
-      |> assign(:assigned_criteria, new_assigned)
+      |> assign(:assigned_criteria, assigned_criteria)
       |> put_flash(:info, msg)
     }
   end

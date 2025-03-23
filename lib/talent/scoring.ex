@@ -428,23 +428,99 @@ defmodule Talent.Scoring do
   end
 
   @doc """
-  Asigna un criterio a un juez para una categoría específica.
+  Asigna un criterio a un juez para una categoría específica, incluyendo automáticamente sus criterios padre.
   """
   def assign_criterion_to_judge(judge_id, criterion_id, category_id) do
-    %JudgeCriterion{}
-    |> JudgeCriterion.changeset(%{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id})
-    |> Repo.insert(on_conflict: :nothing)
+    # Obtener el criterio para verificar si tiene padre
+    criterion = Repo.get(Talent.Scoring.ScoringCriterion, criterion_id)
+
+    # Cargar el padre si existe
+    if criterion && criterion.parent_id do
+      # Primero asignar el padre recursivamente
+      assign_criterion_to_judge(judge_id, criterion.parent_id, category_id)
+    end
+
+    # Asignar el criterio actual
+    result = %JudgeCriterion{}
+      |> JudgeCriterion.changeset(%{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id})
+      |> Repo.insert(on_conflict: :nothing)
+
+    # Ajustar la respuesta para que siempre sea exitosa, incluso en caso de conflicto (on_conflict: :nothing)
+    case result do
+      {:ok, record} -> {:ok, record}
+      {:error, changeset} ->
+        if Keyword.has_key?(changeset.errors, :judge_id) and
+          elem(Keyword.get(changeset.errors, :judge_id), 0) == "ya ha sido asignado" do
+          # Es un caso de duplicación, lo tratamos como éxito
+          {:ok, %JudgeCriterion{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id}}
+        else
+          # Es un error real
+          {:error, changeset}
+        end
+    end
   end
 
   @doc """
-  Elimina la asignación de un criterio a un juez para una categoría específica.
+  Elimina la asignación de un criterio a un juez para una categoría específica
+  y todas las puntuaciones relacionadas con ese criterio.
   """
   def unassign_criterion_from_judge(judge_id, criterion_id, category_id) do
-    from(jc in JudgeCriterion,
-      where: jc.judge_id == ^judge_id and
-            jc.criterion_id == ^criterion_id and
-            jc.category_id == ^category_id)
-    |> Repo.delete_all()
+    # Primero obtenemos todos los participantes de esta categoría
+    participants = Talent.Competitions.list_participants_by_category(category_id)
+    participant_ids = Enum.map(participants, & &1.id)
+
+    # Eliminar todas las puntuaciones para este juez, criterio y participantes de la categoría
+    {deleted_scores_count, _} =
+      from(s in Talent.Scoring.Score,
+        where: s.judge_id == ^judge_id and
+              s.criterion_id == ^criterion_id and
+              s.participant_id in ^participant_ids)
+      |> Repo.delete_all()
+
+    # Eliminar la asignación del criterio
+    {deleted_assignments_count, _} =
+      from(jc in JudgeCriterion,
+        where: jc.judge_id == ^judge_id and
+              jc.criterion_id == ^criterion_id and
+              jc.category_id == ^category_id)
+      |> Repo.delete_all()
+
+    # Devolver información sobre lo que se eliminó
+    %{deleted_scores: deleted_scores_count, deleted_assignments: deleted_assignments_count}
+  end
+
+  @doc """
+  Asigna criterios y todos sus criterios padre a un juez para una categoría específica.
+  Útil para asignación masiva.
+  """
+  def assign_all_parent_criteria(judge_id, criterion_ids, category_id) when is_list(criterion_ids) do
+    # Para cada criterio en la lista, asignar tanto el criterio como sus padres
+    Enum.map(criterion_ids, fn criterion_id ->
+      assign_criterion_to_judge(judge_id, criterion_id, category_id)
+    end)
+  end
+
+  @doc """
+  Función de utilidad para obtener todos los criterios padre de un criterio específico.
+  """
+  def get_all_parent_criteria(criterion_id) do
+    # Obtener el criterio con su padre
+    criterion = Repo.get(Talent.Scoring.ScoringCriterion, criterion_id)
+
+    # Cargar el padre si existe
+    if criterion && criterion.parent_id do
+      parent = Repo.get(Talent.Scoring.ScoringCriterion, criterion.parent_id)
+
+      if parent do
+        # Si el padre existe, incluirlo y buscar sus padres recursivamente
+        [parent | get_all_parent_criteria(parent.id)]
+      else
+        []
+      end
+    else
+      # Si no tiene padre, devolver lista vacía
+      []
+    end
   end
 
   @doc """

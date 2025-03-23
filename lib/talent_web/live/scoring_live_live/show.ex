@@ -1,10 +1,14 @@
 defmodule TalentWeb.ScoringLive.Show do
   use TalentWeb, :live_view
 
+  import Ecto.Query, warn: false
+
   on_mount {TalentWeb.UserAuth, :ensure_authenticated}
 
   alias Talent.Competitions
   alias Talent.Scoring
+  alias Talent.Repo
+  alias Talent.Scoring.JudgeCriterion
   # alias Talent.Scoring.Score
 
   @impl true
@@ -27,16 +31,31 @@ defmodule TalentWeb.ScoringLive.Show do
         assigned_criteria_ids = Scoring.list_criteria_for_judge_in_category(judge.id, category.id)
           |> Enum.map(& &1.id)
 
-        # Filtrar sólo los criterios asignados al juez
-        criteria = if Enum.empty?(assigned_criteria_ids) do
-          # Si no hay criterios específicamente asignados, mostrar todos
-          # Esto puede ser para mantener la compatibilidad con la configuración existente
-          all_criteria
-        else
-          # Filtrar criterios que el juez puede calificar
-          Enum.filter(all_criteria, fn criterion ->
-            Enum.member?(assigned_criteria_ids, criterion.id)
-          end)
+        # Verificar si hay alguna asignación específica de criterios en TODA la tabla
+        # Usamos una consulta Ecto correctamente formateada
+        judge_id = judge.id
+        category_id = category.id
+        has_any_criteria_assignments =
+          from(j in JudgeCriterion,
+            where: j.judge_id == ^judge_id and j.category_id == ^category_id)
+          |> Repo.exists?()
+
+        # Filtrar los criterios que el juez puede calificar
+        criteria = cond do
+          # Si hay asignaciones específicas para este juez en esta categoría, usar solo esas
+          not Enum.empty?(assigned_criteria_ids) ->
+            Enum.filter(all_criteria, fn criterion ->
+              Enum.member?(assigned_criteria_ids, criterion.id)
+            end)
+
+          # Si no hay asignaciones específicas para este juez pero hay asignaciones en general
+          # significa que se le quitaron todos los criterios, así que no debería poder calificar ninguno
+          has_any_criteria_assignments ->
+            []
+
+          # Si no hay asignaciones en absoluto (sistema en estado inicial), mostrar todos
+          true ->
+            all_criteria
         end
 
         # Obtener las puntuaciones existentes del juez para este participante
