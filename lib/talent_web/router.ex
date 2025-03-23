@@ -66,6 +66,7 @@ defmodule TalentWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
+    get "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
       on_mount: [{TalentWeb.UserAuth, :mount_current_user}] do

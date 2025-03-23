@@ -1,3 +1,8 @@
+En admin/scoring_criteria, en vez de mostrar los nombres de las categorias, que
+muestre la cantidad,  y que sea un boton, y al presionarlo se despliegue un modal
+y ahi se muestre el listado de las categorias
+
+
 VERIFICAR PUNTAJE TOTAL --- BUG
 Permitir que los jueces puedan solicitar descalificacion,
 	si todos solicitan, se descalifica automaticamente al participante
@@ -11,3 +16,16 @@ Permitir que los jueces puedan solicitar descalificacion,
 -- Agregar nombre al usuario para mostrarlo en el dashboard
 
 -- agregar CI, Numero, y "Otros datos" de los participantes
+
+-- que el administrador o escribano pueda "CERRAR LAS VOTACIONES o ABRIRLAR DE NUEVO"
+
+-- Boton "ASIGNAR TODAS" cuando se asigna criterios y categorias a cada jurado
+
+-- Cuando se esta logueando, que se desactive el boton Iniciar sesion
+
+
+
+
+--- EPIC - se supone que se podran crear varias competencias, entonces 
+	todos los datos de las tablas deberian tener un FK apuntando al
+	id de esa competencia

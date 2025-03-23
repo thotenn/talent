@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="Talent" suffix=" · Phoenix Framework">
+    <.live_title default="Talent" suffix=" · Talent">
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
@@ -12,13 +12,11 @@
     </script>
   </head>
   <body class="bg-white">
-    <div class="z-10 fixed top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 lg:px-8 pt-3 bg-white">
-      <a href="/">
-        <div class="flex items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold">Inicio</span>
-        </div>
-      </a>
+    <div class="z-10 fixed top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 bg-white shadow-sm">
+      <.link navigate={if @current_user, do: ~p"/dashboard", else: ~p"/users/log_in"} class="flex items-center gap-2">
+        <img src={~p"/images/logo.svg"} width="36" />
+        <span class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold">Inicio</span>
+      </.link>
       <ul class="flex items-center gap-4">
         <%= if @current_user do %>
           <li class="text-[0.8125rem] leading-6 text-gray-400">
@@ -26,15 +24,15 @@
           </li>
           <li>
             <.link
-              href={~p"/users/settings"}
+              navigate={~p"/users/settings"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
-            <.svgicon name="settings" class="w-6 h-6 inline-block text-sky-800" title="Configuración" tooltip_class="bg-gray-800 text-white top-8 -translate-x-50" />
+              <.svgicon name="settings" class="w-6 h-6 inline-block text-sky-800" title="Configuración" tooltip_class="bg-gray-800 text-white top-8 -translate-x-50" />
             </.link>
           </li>
           <li>
             <.link
-              href={~p"/users/log_out"}
+              navigate={~p"/users/log_out"}
               method="delete"
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
@@ -44,7 +42,7 @@
         <% else %>
           <li>
             <.link
-              href={~p"/users/register"}
+              navigate={~p"/users/register"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
               Registrarse
@@ -52,7 +50,7 @@
           </li>
           <li>
             <.link
-              href={~p"/users/log_in"}
+              navigate={~p"/users/log_in"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
               Iniciar sesión
