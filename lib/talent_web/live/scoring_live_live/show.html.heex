@@ -1,12 +1,27 @@
-<.header>
-  Calificación para: <%= @participant.name %>
-  <:subtitle>Categoría: <%= @category.name %></:subtitle>
-  <:actions>
-    <.link navigate={~p"/jury/scoring"} class="text-sm">
-      &larr; Volver al listado de participantes
+<div class="mb-8">
+  <!-- Enlace "Volver" que aparece arriba en móviles -->
+  <div class="md:hidden mb-4">
+    <.link navigate={~p"/jury/scoring?category_id=#{@category.id}"} class="text-sm text-indigo-600 hover:text-indigo-900 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Volver al listado de participantes
     </.link>
-  </:actions>
-</.header>
+  </div>
+  
+  <!-- Header con el enlace visible solo en desktop -->
+  <.header>
+    Calificación para: <%= @participant.name %>
+    <:subtitle>Categoría: <%= @category.name %></:subtitle>
+    <:actions>
+      <div class="hidden md:block">
+        <.link navigate={~p"/jury/scoring?category_id=#{@category.id}"} class="text-sm">
+          &larr; Volver al listado de participantes
+        </.link>
+      </div>
+    </:actions>
+  </.header>
+</div>
 
 <div class="bg-white shadow-md rounded-lg p-6 mb-8">
   <form phx-submit="save-scores">
