@@ -34,6 +34,8 @@ defmodule TalentWeb.DashboardLive do
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold mb-8">Talent</h1>
 
+      <.install_button />
+
       <div class="bg-white shadow-md rounded-lg p-6 mb-8">
         <h2 class="text-xl font-semibold mb-4">
           Bienvenido/a, &nbsp;

@@ -17,6 +17,7 @@
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
+import "./check_pwa_icons.js"
 import "./install.js"
 // Establish Phoenix Socket and LiveView configuration.
 import Hooks from "./hooks"
@@ -53,4 +54,6 @@ if ('serviceWorker' in navigator) {
     refreshing = true;
     window.location.reload();
   });
+
+  console.log('🚀 Talent PWA está listo para ser instalado si tu navegador lo soporta.');
 }

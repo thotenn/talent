@@ -93,6 +93,8 @@ defmodule TalentWeb do
       import TalentWeb.Components.PwaInstallBanner
       # Mobile PWA detector
       import TalentWeb.Components.MobilePwaBanner
+      # Botón de instalación directo
+      import TalentWeb.Components.InstallButton
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

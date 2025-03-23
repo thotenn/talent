@@ -18,6 +18,7 @@ defmodule TalentWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/install", PwaController, :install
 
     # Rutas de cierre de sesión
     delete "/users/log_out", UserSessionController, :delete
