@@ -68,6 +68,40 @@ Hooks.SyncInputs = {
     
     // Actualizar al montar para garantizar sincronización inicial
     updateValues();
+    
+    // NUEVO: Activar efecto hover en el contenedor para dispositivos móviles
+    if (input.type === 'range') {
+      // Buscar el contenedor del criterio (es el padre o el abuelo generalmente)
+      let criterionContainer = findCriterionContainer(input);
+      
+      if (criterionContainer) {
+        // Para dispositivos móviles
+        input.addEventListener("touchstart", () => {
+          criterionContainer.classList.add("active-mobile");
+        }, { passive: true });
+        
+        input.addEventListener("touchend", () => {
+          setTimeout(() => {
+            criterionContainer.classList.remove("active-mobile");
+          }, 500);
+        }, { passive: true });
+        
+        // También para mouse
+        input.addEventListener("mousedown", () => {
+          criterionContainer.classList.add("active-mobile");
+        });
+        
+        input.addEventListener("mouseup", () => {
+          criterionContainer.classList.remove("active-mobile");
+        });
+      }
+    }
+    
+    // Función auxiliar para encontrar el contenedor de criterio
+    function findCriterionContainer(element) {
+      // Buscar el elemento más cercano con la clase criterion-container
+      return element.closest('.criterion-container');
+    }
   }
 };
 

@@ -156,3 +156,9 @@ input[type=range] {
     border-left-color: #4F46E5;
     transform: translateX(4px);
   }
+
+  .criterion-container.active-mobile {
+    background-color: rgba(79, 70, 229, 0.05);
+    border-left-color: #4F46E5;
+    transform: translateX(4px);
+  }
