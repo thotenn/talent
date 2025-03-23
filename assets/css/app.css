@@ -2,6 +2,8 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "scoring.css";
+
 /* This file is for your main application CSS */
 
 /* Transición suave para resaltar cambios */

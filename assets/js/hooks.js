@@ -19,4 +19,56 @@ Hooks.HighlightUpdates = {
   }
 }
 
+// Hook para sincronizar inputs range y number en la interfaz de calificación
+Hooks.SyncInputs = {
+  mounted() {
+    const input = this.el;
+    const targetId = input.getAttribute("data-target");
+    const displayId = input.getAttribute("data-display");
+    
+    // Función para actualizar valores relacionados
+    const updateValues = () => {
+      const targetInput = document.getElementById(targetId);
+      const displayElement = displayId ? document.getElementById(displayId) : null;
+      
+      if (targetInput) {
+        targetInput.value = input.value;
+      }
+      
+      if (displayElement) {
+        displayElement.textContent = input.value;
+        
+        // Añadir clase según el valor para cambiar colores
+        displayElement.parentElement.classList.remove('low-score', 'medium-score', 'high-score');
+        
+        // Obtener el valor máximo del input
+        const max = parseInt(input.max, 10) || 100;
+        const value = parseInt(input.value, 10) || 0;
+        const percentage = (value / max) * 100;
+        
+        // Asignar clase según porcentaje
+        if (percentage < 33) {
+          displayElement.parentElement.classList.add('low-score');
+        } else if (percentage < 66) {
+          displayElement.parentElement.classList.add('medium-score');
+        } else {
+          displayElement.parentElement.classList.add('high-score');
+        }
+        
+        // Efecto de animación al cambiar
+        displayElement.parentElement.classList.add('updated');
+        setTimeout(() => {
+          displayElement.parentElement.classList.remove('updated');
+        }, 300);
+      }
+    };
+    
+    // Escuchar eventos de entrada
+    input.addEventListener("input", updateValues);
+    
+    // Actualizar al montar para garantizar sincronización inicial
+    updateValues();
+  }
+};
+
 export default Hooks;

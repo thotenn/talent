@@ -1,0 +1,158 @@
+/* 
+ * scoring.css - Estilos para la interfaz de calificación
+ * Colocar en assets/css/scoring.css e importar en app.css
+ */
+
+/* Estilos para el input range personalizado */
+input[type=range] {
+    height: 34px;
+    -webkit-appearance: none;
+    margin: 10px 0;
+    width: 100%;
+  }
+  
+  input[type=range]:focus {
+    outline: none;
+  }
+  
+  /* Estilo para Webkit (Chrome, Safari, etc.) */
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 10px;
+    cursor: pointer;
+    animation: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: #E2E8F0;
+    border-radius: 5px;
+    border: 0px solid #000000;
+  }
+  
+  input[type=range]::-webkit-slider-thumb {
+    box-shadow: 1px 1px 3px #4F4F4F;
+    border: 1px solid #4A5568;
+    height: 26px;
+    width: 16px;
+    border-radius: 4px;
+    background: #4F46E5;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -8px;
+  }
+  
+  input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #E2E8F0;
+  }
+  
+  /* Estilo para Mozilla Firefox */
+  input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 10px;
+    cursor: pointer;
+    animation: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: #E2E8F0;
+    border-radius: 5px;
+    border: 0px solid #000000;
+  }
+  
+  input[type=range]::-moz-range-thumb {
+    box-shadow: 1px 1px 3px #4F4F4F;
+    border: 1px solid #4A5568;
+    height: 26px;
+    width: 16px;
+    border-radius: 4px;
+    background: #4F46E5;
+    cursor: pointer;
+  }
+  
+  /* Estilo para el valor numérico en pantalla */
+  .score-value {
+    background: #4F46E5;
+    color: white;
+    font-weight: bold;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  /* Colores para diferentes rangos de puntuación */
+  .score-value.high-score {
+    background: #10B981; /* Verde */
+  }
+  
+  .score-value.medium-score {
+    background: #F59E0B; /* Amarillo */
+  }
+  
+  .score-value.low-score {
+    background: #EF4444; /* Rojo */
+  }
+  
+  /* Animación al cambiar valor */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .score-value.updated {
+    animation: pulse 0.3s ease;
+  }
+  
+  /* Mejoras para responsividad en dispositivos móviles */
+  @media (max-width: 768px) {
+    .score-value {
+      width: 2rem;
+      height: 2rem;
+      font-size: 0.875rem;
+    }
+    
+    input[type=range] {
+      height: 42px; /* Más alto para mejor uso en móvil */
+    }
+    
+    input[type=range]::-webkit-slider-thumb {
+      height: 30px;
+      width: 20px;
+    }
+    
+    input[type=range]::-moz-range-thumb {
+      height: 30px;
+      width: 20px;
+    }
+    
+    /* Para pantallas muy pequeñas */
+    @media (max-width: 460px) {
+      .number-input-container {
+        display: none;
+      }
+      
+      .score-value {
+        margin-left: auto;
+      }
+    }
+  }
+  
+  /* Estilos para el contenedor de criterios */
+  .criterion-container {
+    border-radius: 8px;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    padding: 12px;
+  }
+  
+  .criterion-container:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+    border-left-color: #4F46E5;
+    transform: translateX(4px);
+  }
