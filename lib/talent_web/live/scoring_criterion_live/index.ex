@@ -4,13 +4,18 @@ defmodule TalentWeb.ScoringCriterionLive.Index do
   alias Talent.Scoring
   alias Talent.Scoring.ScoringCriterion
   alias Talent.Competitions
+  alias Talent.Repo
 
   @impl true
   def mount(_params, _session, socket) do
+    # Cargar los criterios con las relaciones necesarias
+    criteria = Scoring.list_scoring_criteria()
+
+    # Obtener categorías para el formulario
     categories = Competitions.list_categories() |> Enum.map(fn c -> {c.name, c.id} end)
 
     {:ok, socket
-      |> stream(:scoring_criteria, Scoring.list_scoring_criteria(), reset: true)
+      |> stream(:scoring_criteria, criteria, reset: true)
       |> assign(:categories, categories)
     }
   end
@@ -40,6 +45,10 @@ defmodule TalentWeb.ScoringCriterionLive.Index do
 
   @impl true
   def handle_info({TalentWeb.ScoringCriterionLive.FormComponent, {:saved, criterion}}, socket) do
+    # Asegurarnos de que el criterio tiene todas sus relaciones cargadas
+    criterion = Repo.preload(criterion, [:categories, :parent, :sub_criteria])
+
+    # Insertar el criterio actualizado en el stream
     {:noreply, stream_insert(socket, :scoring_criteria, criterion)}
   end
 

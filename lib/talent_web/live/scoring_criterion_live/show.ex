@@ -11,10 +11,12 @@ defmodule TalentWeb.ScoringCriterionLive.Show do
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
     criterion = Scoring.get_scoring_criterion!(id)
+    categories = Scoring.get_categories_for_criterion(criterion.id)
 
     {:noreply,
      socket
      |> assign(:page_title, "Detalles del Criterio")
-     |> assign(:criterion, criterion)}
+     |> assign(:criterion, criterion)
+     |> assign(:categories, categories)}
   end
 end

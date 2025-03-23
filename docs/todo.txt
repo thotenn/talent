@@ -1,0 +1,23 @@
+VERIFICAR PUNTAJE TOTAL --- BUG
+Permitir que los jueces puedan solicitar descalificacion,
+	si todos solicitan, se descalifica automaticamente al participante
+	si no, entonces la solicitud llega al administrador
+AGREGAR DESCUENTOS
+
+-- sOLA MENTE ALGUNAS Categorias tienen descuentos, no todas, (SOLO ELITE EN DRAGONFLY)
+--- Cada jurado califica sus propios criterios de evaluacion definidos
+
+-- En /admin/judges/#/assign_categories, aparte del boton Asignar/Quitar tambien
+	debera haber un boton para seleccionar criterios de evaluacion para ese juez
+	se podran seleccionar de a 1 como seleccionar todos los criterios
+
+
+
+--- Vista para listar todos los participantes de todas las categorias con sus respectivos puntajes maximos
+
+
+-- Cuando un juez califica, seria genial cambiar la pantalla a una mas parecida a una tabla, 
+	se muestre el criterio y debajo un input tipo rango y alado el  input text que se mostrara
+	lo del rango o editar directamente ahi
+	
+-- Mejorar seleccion de categorias cuando se crea un criterio

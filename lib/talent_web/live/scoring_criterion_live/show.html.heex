@@ -13,12 +13,25 @@
 <.list>
   <:item title="Nombre"><%= @criterion.name %></:item>
   <:item title="Descripción"><%= @criterion.description %></:item>
-  <:item title="Categoría">
-    <%= if @criterion.category, do: @criterion.category.name, else: "Sin categoría" %>
+  <:item title="Categorías">
+    <div class="flex flex-wrap gap-1">
+      <%= for category <- @categories do %>
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <%= category.name %>
+        </span>
+      <% end %>
+      
+      <%= if Enum.empty?(@categories) do %>
+        <span class="text-gray-500 italic">Sin categorías asignadas</span>
+      <% end %>
+    </div>
   </:item>
   <:item title="Puntaje Máximo"><%= @criterion.max_points %></:item>
   <:item title="Criterio Padre">
     <%= if @criterion.parent, do: @criterion.parent.name, else: "Criterio Principal" %>
+  </:item>
+  <:item title="Tipo">
+    <%= if @criterion.is_discount, do: "Descuento (resta puntos)", else: "Puntuación (suma puntos)" %>
   </:item>
 </.list>
 

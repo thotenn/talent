@@ -17,10 +17,10 @@ defmodule Talent.Scoring do
       [%ScoringCriterion{}, ...]
 
   """
-def list_scoring_criteria do
-  Repo.all(ScoringCriterion)
-  |> Repo.preload([:category, :parent, :sub_criteria])
-end
+  def list_scoring_criteria do
+    Repo.all(ScoringCriterion)
+    |> Repo.preload([:categories, :parent, :sub_criteria])
+  end
 
   @doc """
   Gets a single scoring_criterion.
@@ -36,7 +36,10 @@ end
       ** (Ecto.NoResultsError)
 
   """
-  def get_scoring_criterion!(id), do: Repo.get!(ScoringCriterion, id)
+  def get_scoring_criterion!(id) do
+    Repo.get!(ScoringCriterion, id)
+    |> Repo.preload([:categories, :parent, :sub_criteria])
+  end
 
   @doc """
   Creates a scoring_criterion.
@@ -56,7 +59,7 @@ end
     |> Repo.insert()
     |> case do
       {:ok, criterion} ->
-        {:ok, Repo.preload(criterion, [:category, :parent, :sub_criteria])}
+        {:ok, Repo.preload(criterion, [:categories, :parent, :sub_criteria])}
       error ->
         error
     end
@@ -79,7 +82,7 @@ end
     |> Repo.update()
     |> case do
       {:ok, criterion} ->
-        {:ok, Repo.preload(criterion, [:category, :parent, :sub_criteria])}
+        {:ok, Repo.preload(criterion, [:categories, :parent, :sub_criteria])}
       error ->
         error
     end
@@ -229,13 +232,19 @@ end
     Score.changeset(score, attrs)
   end
 
-    @doc """
+  @doc """
   Gets a list of root scoring criteria for a specific category.
   """
   def list_root_scoring_criteria_by_category(category_id) do
-    ScoringCriterion
-    |> where([sc], sc.category_id == ^category_id and is_nil(sc.parent_id))
-    |> Repo.all()
+    # En lugar de buscar por category_id directamente,
+    # debemos hacerlo a través de la tabla de unión criteria_categories
+    query = from cc in Talent.Scoring.CriterionCategory,
+            where: cc.category_id == ^category_id,
+            join: sc in Talent.Scoring.ScoringCriterion, on: sc.id == cc.criterion_id,
+            where: is_nil(sc.parent_id),
+            select: sc
+
+    Repo.all(query)
     |> Repo.preload(:sub_criteria)
   end
 
@@ -249,6 +258,8 @@ end
     |> Repo.preload([:judge, :criterion])
   end
 
+  @spec get_judge_scores_for_participant(any(), any()) ::
+          nil | [%{optional(atom()) => any()}] | %{optional(atom()) => any()}
   @doc """
   Gets a judge's scores for a participant.
   """
@@ -260,14 +271,62 @@ end
   end
 
   @doc """
-  Calculates the total score for a participant across all judges.
+  Asigna múltiples categorías a un criterio de puntuación.
+  """
+  def assign_categories_to_criterion(criterion_id, category_ids) when is_list(category_ids) do
+    # Primero eliminamos todas las asignaciones existentes
+    from(cc in Talent.Scoring.CriterionCategory, where: cc.criterion_id == ^criterion_id)
+    |> Repo.delete_all()
+
+    # Luego creamos las nuevas asignaciones
+    Enum.map(category_ids, fn category_id when not is_nil(category_id) ->
+      %Talent.Scoring.CriterionCategory{}
+      |> Talent.Scoring.CriterionCategory.changeset(%{
+        criterion_id: criterion_id,
+        category_id: category_id
+      })
+      |> Repo.insert()
+    end)
+  end
+
+  @doc """
+  Obtiene todas las categorías asignadas a un criterio de puntuación.
+  """
+  def get_categories_for_criterion(criterion_id) do
+    Talent.Scoring.CriterionCategory
+    |> where([cc], cc.criterion_id == ^criterion_id)
+    |> join(:inner, [cc], c in Talent.Competitions.Category, on: c.id == cc.category_id)
+    |> select([_cc, c], c)
+    |> Repo.all()
+  end
+
+  @doc """
+  Obtiene todos los criterios de puntuación asignados a una categoría.
+  """
+  def list_scoring_criteria_by_category(category_id) do
+    Talent.Scoring.CriterionCategory
+    |> where([cc], cc.category_id == ^category_id)
+    |> join(:inner, [cc], sc in Talent.Scoring.ScoringCriterion, on: sc.id == cc.criterion_id)
+    |> select([_cc, sc], sc)
+    |> Repo.all()
+  end
+
+  @doc """
+  Modifica la función para considerar criterios que son descuentos.
   """
   def calculate_total_score(participant_id) do
-    query = from s in Score,
-            where: s.participant_id == ^participant_id,
-            select: sum(s.value)
+    # Obtener todos los scores del participante con sus criterios
+    scores_query = from s in Score,
+                  where: s.participant_id == ^participant_id,
+                  join: sc in Talent.Scoring.ScoringCriterion, on: s.criterion_id == sc.id,
+                  select: {s.value, sc.is_discount}
 
-    Repo.one(query) || 0
+    # Calcular el total teniendo en cuenta si son descuentos o no
+    Repo.all(scores_query)
+    |> Enum.reduce(0, fn
+      {value, true}, acc -> acc - value  # Si es descuento, restar
+      {value, false}, acc -> acc + value # Si no es descuento, sumar
+    end)
   end
 
   @doc """
@@ -275,8 +334,8 @@ end
   """
   def calculate_average_score_by_criterion(participant_id, criterion_id) do
     query = from s in Score,
-            where: s.participant_id == ^participant_id and s.criterion_id == ^criterion_id,
-            select: avg(s.value)
+              where: s.participant_id == ^participant_id and s.criterion_id == ^criterion_id,
+              select: avg(s.value)
 
     Repo.one(query) || 0
   end

@@ -5,6 +5,7 @@ alias Talent.Accounts
 alias Talent.Accounts.User
 alias Talent.Competitions
 alias Talent.Scoring
+alias Talent.Scoring.CriterionCategory
 import Ecto.Query, only: [from: 2]
 
 # Crear usuario administrador
@@ -27,58 +28,112 @@ Repo.update_all(
   max_points: 120
 })
 
-{:ok, _amateur} = Competitions.create_category(%{
+{:ok, amateur} = Competitions.create_category(%{
   name: "Amateur",
   description: "Categoría para bailarines amateur",
   max_points: 150
 })
 
-{:ok, _profesional_femenino} = Competitions.create_category(%{
+{:ok, profesional_femenino} = Competitions.create_category(%{
   name: "Profesional Femenino",
   description: "Categoría para bailarinas profesionales",
   max_points: 170
 })
 
-# Crear criterios de calificación para la categoría principiantes
-{:ok, artistico} = Scoring.create_scoring_criterion(%{
+# Crear criterios de calificación (sin asociación directa a categorías)
+{:ok, artistico} = %Talent.Scoring.ScoringCriterion{}
+|> Talent.Scoring.ScoringCriterion.changeset(%{
   name: "Artístico",
-  category_id: principiantes.id,
-  max_points: 35
+  description: "Evaluación de aspectos artísticos",
+  max_points: 35,
+  is_discount: false
 })
+|> Talent.Repo.insert()
 
-{:ok, _expresividad} = Scoring.create_scoring_criterion(%{
+{:ok, expresividad} = Scoring.create_scoring_criterion(%{
   name: "Expresividad/Actitud Escénica",
-  category_id: principiantes.id,
+  description: "Evaluación de la expresividad y actitud en escena",
   parent_id: artistico.id,
-  max_points: 10
+  max_points: 10,
+  is_discount: false
 })
 
-{:ok, _imagen} = Scoring.create_scoring_criterion(%{
+{:ok, imagen} = Scoring.create_scoring_criterion(%{
   name: "Imagen Vestuario Maquillaje y Peinado",
-  category_id: principiantes.id,
+  description: "Evaluación de la presentación visual",
   parent_id: artistico.id,
-  max_points: 10
+  max_points: 10,
+  is_discount: false
 })
 
 {:ok, tecnico} = Scoring.create_scoring_criterion(%{
   name: "Técnico de Pole",
-  category_id: principiantes.id,
-  max_points: 40
+  description: "Evaluación de aspectos técnicos",
+  max_points: 40,
+  is_discount: false
 })
 
-{:ok, _fuerza} = Scoring.create_scoring_criterion(%{
+{:ok, fuerza} = Scoring.create_scoring_criterion(%{
   name: "Fuerza",
-  category_id: principiantes.id,
+  description: "Evaluación de la fuerza demostrada",
   parent_id: tecnico.id,
-  max_points: 10
+  max_points: 10,
+  is_discount: false
 })
 
-{:ok, _flexibilidad} = Scoring.create_scoring_criterion(%{
+{:ok, flexibilidad} = Scoring.create_scoring_criterion(%{
   name: "Flexibilidad",
-  category_id: principiantes.id,
+  description: "Evaluación de la flexibilidad",
   parent_id: tecnico.id,
-  max_points: 10
+  max_points: 10,
+  is_discount: false
 })
+
+# Crear un criterio de descuento
+{:ok, caidas} = Scoring.create_scoring_criterion(%{
+  name: "Caídas",
+  description: "Penalización por caídas durante la presentación",
+  max_points: 15,
+  is_discount: true
+})
+
+# Asignar criterios a categorías mediante la nueva tabla de unión
+# Asignar criterios artísticos a todas las categorías
+Enum.each([principiantes.id, amateur.id, profesional_femenino.id], fn category_id ->
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: artistico.id, category_id: category_id})
+  |> Repo.insert!()
+
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: expresividad.id, category_id: category_id})
+  |> Repo.insert!()
+
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: imagen.id, category_id: category_id})
+  |> Repo.insert!()
+end)
+
+# Asignar criterios técnicos a principiantes y amateur
+Enum.each([principiantes.id, amateur.id], fn category_id ->
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: tecnico.id, category_id: category_id})
+  |> Repo.insert!()
+
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: fuerza.id, category_id: category_id})
+  |> Repo.insert!()
+
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: flexibilidad.id, category_id: category_id})
+  |> Repo.insert!()
+end)
+
+# Asignar el criterio de descuento a todas las categorías
+Enum.each([principiantes.id, amateur.id, profesional_femenino.id], fn category_id ->
+  %CriterionCategory{}
+  |> CriterionCategory.changeset(%{criterion_id: caidas.id, category_id: category_id})
+  |> Repo.insert!()
+end)
 
 # Crear un usuario con rol de jurado
 {:ok, jurado_user} = Accounts.register_user(%{
@@ -94,10 +149,14 @@ Repo.update_all(
 )
 
 # Crear un juez asociado con el usuario jurado
-{:ok, _juez} = Competitions.create_judge(%{
+{:ok, juez} = Competitions.create_judge(%{
   name: "Juez Ejemplo",
   user_id: jurado_user.id
 })
+
+# Asignar el juez a categorías
+Competitions.assign_judge_to_category(juez.id, principiantes.id)
+Competitions.assign_judge_to_category(juez.id, amateur.id)
 
 # Crear un usuario secretario
 {:ok, secretario} = Accounts.register_user(%{
@@ -124,5 +183,26 @@ Repo.update_all(
   from(u in User, where: u.id == ^escribana.id),
   set: [confirmed_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)]
 )
+
+# Crear algunos participantes
+{:ok, _} = Competitions.create_participant(%{
+  name: "Ana Rodríguez",
+  category_id: principiantes.id
+})
+
+{:ok, _} = Competitions.create_participant(%{
+  name: "Carlos Gómez",
+  category_id: principiantes.id
+})
+
+{:ok, _} = Competitions.create_participant(%{
+  name: "Laura Fernández",
+  category_id: amateur.id
+})
+
+{:ok, _} = Competitions.create_participant(%{
+  name: "María Pérez",
+  category_id: profesional_femenino.id
+})
 
 IO.puts("Datos iniciales creados correctamente!")
