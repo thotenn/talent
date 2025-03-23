@@ -429,28 +429,29 @@ defmodule Talent.Scoring do
 
   @doc """
   Asigna un criterio a un juez para una categoría específica, incluyendo automáticamente sus criterios padre.
+  Sin embargo, NO asigna automáticamente los criterios hijo.
   """
   def assign_criterion_to_judge(judge_id, criterion_id, category_id) do
     # Obtener el criterio para verificar si tiene padre
     criterion = Repo.get(Talent.Scoring.ScoringCriterion, criterion_id)
 
-    # Cargar el padre si existe
+    # Cargar el padre si existe y asignarlo primero
     if criterion && criterion.parent_id do
       # Primero asignar el padre recursivamente
       assign_criterion_to_judge(judge_id, criterion.parent_id, category_id)
     end
 
-    # Asignar el criterio actual
+    # Asignar el criterio actual (NO asignamos automáticamente los hijos)
     result = %JudgeCriterion{}
       |> JudgeCriterion.changeset(%{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id})
       |> Repo.insert(on_conflict: :nothing)
 
-    # Ajustar la respuesta para que siempre sea exitosa, incluso en caso de conflicto (on_conflict: :nothing)
+    # Ajustar la respuesta
     case result do
       {:ok, record} -> {:ok, record}
       {:error, changeset} ->
         if Keyword.has_key?(changeset.errors, :judge_id) and
-          elem(Keyword.get(changeset.errors, :judge_id), 0) == "ya ha sido asignado" do
+          elem(Keyword.get(changeset.errors, :judge_id), 0) == "has already been taken" do
           # Es un caso de duplicación, lo tratamos como éxito
           {:ok, %JudgeCriterion{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id}}
         else

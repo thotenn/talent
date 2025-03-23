@@ -24,7 +24,7 @@ defmodule TalentWeb.ScoringLive.Show do
       is_assigned = Competitions.judge_assigned_to_category?(judge.id, category.id)
 
       if is_assigned do
-        # Obtener todos los criterios de evaluación para esta categoría
+        # Obtener todos los criterios de evaluación para esta categoría con subcríterios
         all_criteria = Scoring.list_root_scoring_criteria_by_category(category.id)
 
         # Obtener los criterios asignados a este juez para esta categoría
@@ -32,7 +32,6 @@ defmodule TalentWeb.ScoringLive.Show do
           |> Enum.map(& &1.id)
 
         # Verificar si hay alguna asignación específica de criterios en TODA la tabla
-        # Usamos una consulta Ecto correctamente formateada
         judge_id = judge.id
         category_id = category.id
         has_any_criteria_assignments =
@@ -44,16 +43,28 @@ defmodule TalentWeb.ScoringLive.Show do
         criteria = cond do
           # Si hay asignaciones específicas para este juez en esta categoría, usar solo esas
           not Enum.empty?(assigned_criteria_ids) ->
-            Enum.filter(all_criteria, fn criterion ->
+            filtered_criteria = Enum.filter(all_criteria, fn criterion ->
               Enum.member?(assigned_criteria_ids, criterion.id)
             end)
 
-          # Si no hay asignaciones específicas para este juez pero hay asignaciones en general
-          # significa que se le quitaron todos los criterios, así que no debería poder calificar ninguno
+            # IMPORTANTE: También necesitamos filtrar los subcríterios asignados
+            filtered_criteria = Enum.map(filtered_criteria, fn criterion ->
+              # Filtramos los subcríterios para incluir solo los asignados al juez
+              filtered_sub_criteria = Enum.filter(criterion.sub_criteria || [], fn sub ->
+                Enum.member?(assigned_criteria_ids, sub.id)
+              end)
+
+              # Actualizar el criterio con solo los subcríterios asignados
+              Map.put(criterion, :sub_criteria, filtered_sub_criteria)
+            end)
+
+            filtered_criteria
+
+          # Si no hay asignaciones específicas pero hay asignaciones en general, no mostrar nada
           has_any_criteria_assignments ->
             []
 
-          # Si no hay asignaciones en absoluto (sistema en estado inicial), mostrar todos
+          # Si no hay asignaciones en absoluto (sistema inicial), mostrar todos
           true ->
             all_criteria
         end
@@ -155,8 +166,9 @@ defmodule TalentWeb.ScoringLive.Show do
         end
 
       # Para cada subcriterio, hacer lo mismo
+      # Nota: Ahora solo procesamos los subcriterios que han sido filtrados
       sub_scores =
-        Enum.reduce(criterion.sub_criteria, %{}, fn sub, sub_acc ->
+        Enum.reduce(criterion.sub_criteria || [], %{}, fn sub, sub_acc ->
           sub_value =
             case Map.get(existing_scores, sub.id) do
               [score | _] -> score.value
