@@ -1,0 +1,87 @@
+erDiagram
+    USERS ||--o{ JUDGES : "has_one"
+    JUDGES ||--o{ CATEGORY_JUDGES : "has_many"
+    CATEGORIES ||--o{ CATEGORY_JUDGES : "has_many"
+    CATEGORIES ||--o{ PARTICIPANTS : "has_many"
+    JUDGES ||--o{ SCORES : "has_many"
+    PARTICIPANTS ||--o{ SCORES : "has_many"
+    SCORING_CRITERIA ||--o{ SCORES : "has_many"
+    CATEGORIES ||--o{ CRITERIA_CATEGORIES : "has_many"
+    SCORING_CRITERIA ||--o{ CRITERIA_CATEGORIES : "has_many"
+    JUDGES ||--o{ JUDGE_CRITERIA : "has_many"
+    CATEGORIES ||--o{ JUDGE_CRITERIA : "has_many"
+    SCORING_CRITERIA ||--o{ JUDGE_CRITERIA : "has_many"
+    SCORING_CRITERIA ||--o{ SUB_CRITERIA : "has_many"
+    
+    USERS {
+        id bigint PK
+        email string
+        hashed_password string
+        confirmed_at datetime
+        role string
+    }
+    
+    JUDGES {
+        id bigint PK
+        name string
+        user_id bigint FK
+        scores_access boolean
+    }
+    
+    CATEGORIES {
+        id bigint PK
+        name string
+        description text
+        max_points integer
+    }
+    
+    CATEGORY_JUDGES {
+        id bigint PK
+        category_id bigint FK
+        judge_id bigint FK
+    }
+    
+    PARTICIPANTS {
+        id bigint PK
+        name string
+        category_id bigint FK
+    }
+    
+    SCORING_CRITERIA {
+        id bigint PK
+        name string
+        description text
+        max_points integer
+        parent_id bigint FK
+        is_discount boolean
+    }
+    
+    SUB_CRITERIA {
+        id bigint PK
+        name string
+        description text
+        max_points integer
+        parent_id bigint FK
+        is_discount boolean
+    }
+    
+    CRITERIA_CATEGORIES {
+        id bigint PK
+        criterion_id bigint FK
+        category_id bigint FK
+    }
+    
+    JUDGE_CRITERIA {
+        id bigint PK
+        judge_id bigint FK
+        criterion_id bigint FK
+        category_id bigint FK
+    }
+    
+    SCORES {
+        id bigint PK
+        value integer
+        judge_id bigint FK
+        participant_id bigint FK
+        criterion_id bigint FK
+    }

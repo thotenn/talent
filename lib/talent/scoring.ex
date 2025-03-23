@@ -7,6 +7,7 @@ defmodule Talent.Scoring do
   alias Talent.Repo
 
   alias Talent.Scoring.ScoringCriterion
+  alias Talent.Scoring.JudgeCriterion
 
   @doc """
   Returns the list of scoring_criteria.
@@ -425,4 +426,86 @@ defmodule Talent.Scoring do
         result
     end
   end
+
+  @doc """
+  Asigna un criterio a un juez para una categoría específica.
+  """
+  def assign_criterion_to_judge(judge_id, criterion_id, category_id) do
+    %JudgeCriterion{}
+    |> JudgeCriterion.changeset(%{judge_id: judge_id, criterion_id: criterion_id, category_id: category_id})
+    |> Repo.insert(on_conflict: :nothing)
+  end
+
+  @doc """
+  Elimina la asignación de un criterio a un juez para una categoría específica.
+  """
+  def unassign_criterion_from_judge(judge_id, criterion_id, category_id) do
+    from(jc in JudgeCriterion,
+      where: jc.judge_id == ^judge_id and
+            jc.criterion_id == ^criterion_id and
+            jc.category_id == ^category_id)
+    |> Repo.delete_all()
+  end
+
+  @doc """
+  Verifica si un criterio está asignado a un juez para una categoría específica.
+  """
+  def judge_has_criterion?(judge_id, criterion_id, category_id) do
+    from(jc in JudgeCriterion,
+      where: jc.judge_id == ^judge_id and
+            jc.criterion_id == ^criterion_id and
+            jc.category_id == ^category_id)
+    |> Repo.exists?()
+  end
+
+  @doc """
+  Obtiene todos los criterios asignados a un juez para una categoría específica.
+  """
+  def list_criteria_for_judge_in_category(judge_id, category_id) do
+    from(jc in JudgeCriterion,
+      where: jc.judge_id == ^judge_id and jc.category_id == ^category_id,
+      join: c in Talent.Scoring.ScoringCriterion, on: c.id == jc.criterion_id,
+      select: c)
+    |> Repo.all()
+  end
+
+  @doc """
+  Obtiene todos los criterios que un juez puede calificar.
+  """
+  def list_criteria_for_judge(judge_id) do
+    from(jc in JudgeCriterion,
+      where: jc.judge_id == ^judge_id,
+      join: c in Talent.Scoring.ScoringCriterion, on: c.id == jc.criterion_id,
+      join: cat in Talent.Competitions.Category, on: cat.id == jc.category_id,
+      select: {c, cat})
+    |> Repo.all()
+  end
+
+  @doc """
+  Actualiza la función para considerar criterios que son descuentos y filtrar por los criterios asignados al juez.
+  """
+  def calculate_total_score_with_criteria_restriction(participant_id, judge_id) do
+    # Obtener la categoría del participante
+    participant = Talent.Competitions.get_participant!(participant_id) |> Repo.preload(:category)
+    category_id = participant.category_id
+
+    # Obtener los criterios asignados al juez para esta categoría
+    judge_criteria = list_criteria_for_judge_in_category(judge_id, category_id)
+    judge_criteria_ids = Enum.map(judge_criteria, & &1.id)
+
+    # Obtener los scores del juez para este participante, filtrando por criterios asignados
+    scores_query = from s in Talent.Scoring.Score,
+                  where: s.participant_id == ^participant_id and s.judge_id == ^judge_id,
+                  join: sc in Talent.Scoring.ScoringCriterion, on: s.criterion_id == sc.id,
+                  where: s.criterion_id in ^judge_criteria_ids,
+                  select: {s.value, sc.is_discount}
+
+    # Calcular el total teniendo en cuenta si son descuentos o no
+    Repo.all(scores_query)
+    |> Enum.reduce(0, fn
+      {value, true}, acc -> acc - value  # Si es descuento, restar
+      {value, false}, acc -> acc + value # Si no es descuento, sumar
+    end)
+  end
+
 end

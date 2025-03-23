@@ -20,8 +20,24 @@ defmodule TalentWeb.ScoringLive.Show do
       is_assigned = Competitions.judge_assigned_to_category?(judge.id, category.id)
 
       if is_assigned do
-        # Obtener los criterios de evaluación para esta categoría
-        criteria = Scoring.list_root_scoring_criteria_by_category(category.id)
+        # Obtener todos los criterios de evaluación para esta categoría
+        all_criteria = Scoring.list_root_scoring_criteria_by_category(category.id)
+
+        # Obtener los criterios asignados a este juez para esta categoría
+        assigned_criteria_ids = Scoring.list_criteria_for_judge_in_category(judge.id, category.id)
+          |> Enum.map(& &1.id)
+
+        # Filtrar sólo los criterios asignados al juez
+        criteria = if Enum.empty?(assigned_criteria_ids) do
+          # Si no hay criterios específicamente asignados, mostrar todos
+          # Esto puede ser para mantener la compatibilidad con la configuración existente
+          all_criteria
+        else
+          # Filtrar criterios que el juez puede calificar
+          Enum.filter(all_criteria, fn criterion ->
+            Enum.member?(assigned_criteria_ids, criterion.id)
+          end)
+        end
 
         # Obtener las puntuaciones existentes del juez para este participante
         existing_scores = Scoring.get_judge_scores_for_participant(judge.id, participant.id)
@@ -55,9 +71,25 @@ defmodule TalentWeb.ScoringLive.Show do
     judge = socket.assigns.judge
     participant = socket.assigns.participant
 
+    # Obtener los criterios asignados a este juez para esta categoría
+    assigned_criteria_ids = Scoring.list_criteria_for_judge_in_category(judge.id, participant.category_id)
+      |> Enum.map(& &1.id)
+
+    # Si hay criterios asignados, verificar que solo se procesen esos
+    valid_criterion_ids = if Enum.empty?(assigned_criteria_ids) do
+      # Si no hay criterios específicamente asignados, permitir todos
+      Map.keys(scores_params) |> Enum.map(&String.to_integer/1)
+    else
+      # Filtrar sólo los criterios asignados
+      Map.keys(scores_params)
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.filter(&Enum.member?(assigned_criteria_ids, &1))
+    end
+
+    # Procesar sólo los criterios válidos
     results =
-      Enum.map(scores_params, fn {criterion_id, value} ->
-        criterion_id = String.to_integer(criterion_id)
+      Enum.map(valid_criterion_ids, fn criterion_id ->
+        value = scores_params[to_string(criterion_id)]
         value =
           case Float.parse(value) do
             {val, _} -> val
@@ -83,12 +115,6 @@ defmodule TalentWeb.ScoringLive.Show do
     end)
 
     if Enum.empty?(errors) do
-      # Recalcular el formulario con las nuevas puntuaciones
-      # existing_scores = Scoring.get_judge_scores_for_participant(judge.id, participant.id)
-      # |> Enum.group_by(fn score -> score.criterion_id end)
-
-      # scores_form = init_scores_form(socket.assigns.criteria, existing_scores)
-
       {:noreply, socket
         |> put_flash(:info, "Puntuaciones guardadas correctamente")
         |> push_navigate(to: ~p"/jury/scoring?category_id=#{participant.category_id}")
