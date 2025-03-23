@@ -7,3 +7,7 @@ Permitir que los jueces puedan solicitar descalificacion,
 	sus respectivos puntajes maximos
 	
 -- Mejorar seleccion de categorias cuando se crea un criterio
+
+-- Agregar nombre al usuario para mostrarlo en el dashboard
+
+-- agregar CI, Numero, y "Otros datos" de los participantes

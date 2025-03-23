@@ -35,9 +35,12 @@ defmodule TalentWeb.DashboardLive do
       <h1 class="text-3xl font-bold mb-8">Talent</h1>
 
       <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Bienvenido/a, {@current_user.email}</h2>
+        <h2 class="text-xl font-semibold mb-4">
+          Bienvenido/a, &nbsp;
+          <span class="font-medium text-zinc-600">{@current_user.email}</span>
+        </h2>
         <p class="mb-2">
-          Rol actual: <span class="font-medium">{String.capitalize(@user_role)}</span>
+          <span class="font-medium">{String.capitalize(@user_role)}</span>
         </p>
 
         <div class="mt-6">

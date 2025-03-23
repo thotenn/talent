@@ -21,7 +21,7 @@
       </a>
       <ul class="flex items-center gap-4">
         <%= if @current_user do %>
-          <li class="text-[0.8125rem] leading-6 text-zinc-900">
+          <li class="text-[0.8125rem] leading-6 text-gray-400">
             {@current_user.email}
           </li>
           <li>
@@ -29,7 +29,7 @@
               href={~p"/users/settings"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
-              Configuración
+            <.svgicon name="settings" class="w-6 h-6 inline-block text-sky-800" title="Configuración" tooltip_class="bg-gray-800 text-white top-8 -translate-x-50" />
             </.link>
           </li>
           <li>
@@ -38,7 +38,7 @@
               method="delete"
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
-              Cerrar sesión
+              <.svgicon name="log-out" class="w-6 h-6 inline-block text-rose-800" title="Cerrar sesión" tooltip_class="bg-gray-800 text-white top-8 -right-15" />
             </.link>
           </li>
         <% else %>
