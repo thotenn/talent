@@ -38,7 +38,7 @@
       <.svgicon_update />
     </.link>
   </:action>
-  <:action :let={{id, criterion}}>
+  <:action :let={{_id, criterion}}>
     <.link
       phx-click={JS.push("delete", value: %{id: criterion.id})}
       data-confirm="¿Estás seguro de que deseas eliminar este criterio?"
