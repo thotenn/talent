@@ -37,30 +37,34 @@ defmodule TalentWeb.UserSettingsLive do
           document.documentElement.classList.remove('dark');
         }
 
-        // Inicializar checkbox cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
+        // Función para actualizar el estado del checkbox
+        function updateCheckboxState() {
           const checkbox = document.getElementById('dark-mode-checkbox');
           if (checkbox) {
-            // Inicializar según localStorage
             checkbox.checked = localStorage.getItem('darkMode') === 'dark';
           }
-        });
+        }
+
+        // Ejecutar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', updateCheckboxState);
+
+        // Ejecutar inmediatamente también (para cuando la página se carga por navegación)
+        updateCheckboxState();
+
+        // IMPORTANTE: Agregar un callback para cuando LiveView actualiza el DOM
+        document.addEventListener('phx:update', updateCheckboxState);
 
         // Función global para cambiar el modo oscuro (llamada desde onclick)
         function toggleDarkMode() {
           const checkbox = document.getElementById('dark-mode-checkbox');
           if (!checkbox) return;
 
-          console.log("Checkbox clicked, nuevo estado:", checkbox.checked);
-
           if (checkbox.checked) {
             document.documentElement.classList.add('dark');
             localStorage.setItem('darkMode', 'dark');
-            console.log("Modo oscuro activado");
           } else {
             document.documentElement.classList.remove('dark');
             localStorage.setItem('darkMode', 'light');
-            console.log("Modo oscuro desactivado");
           }
         }
       </script>
