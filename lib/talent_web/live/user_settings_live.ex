@@ -16,116 +16,53 @@ defmodule TalentWeb.UserSettingsLive do
 
     <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
       <h3 class="text-lg font-medium mb-2 dark:text-white">Preferencias de visualización</h3>
-      <div class="flex items-center space-x-4">
-        <div id="text-light-mode" class="font-medium text-sm text-indigo-600 dark:text-gray-400">Modo claro</div>
-
-        <!-- Switch simplificado con JavaScript puro -->
-        <button
-          type="button"
-          id="dark-mode-toggle"
-          class="inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-          aria-pressed="false"
-          aria-labelledby="dark-mode-toggle-label"
-        >
-          <span class="sr-only">Activar modo oscuro</span>
-          <span
-            aria-hidden="true"
-            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"
-          ></span>
-        </button>
-
-        <div id="text-dark-mode" class="font-medium text-sm text-gray-500 dark:text-indigo-400">Modo oscuro</div>
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="dark-mode-checkbox"
+          class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+          onclick="toggleDarkMode()"
+        />
+        <label for="dark-mode-checkbox" class="font-medium text-sm dark:text-white">
+          Activar modo oscuro
+        </label>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">El modo oscuro reduce el cansancio visual en entornos con poca luz.</p>
 
       <script>
-        // Script integrado para evitar dependencias LiveView
+        // Aplicar modo oscuro inmediatamente basado en localStorage
+        if (localStorage.getItem('darkMode') === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+
+        // Inicializar checkbox cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-          // Verificar si existe el botón de modo oscuro
-          const darkModeToggle = document.getElementById('dark-mode-toggle');
-
-          if (darkModeToggle) {
-            // Comprobar preferencia almacenada
-            const isDarkMode = localStorage.getItem('darkModeEnabled') === 'true';
-
-            // Aplicar modo oscuro si está habilitado
-            if (isDarkMode) {
-              document.documentElement.classList.add('dark');
-              darkModeToggle.setAttribute('aria-pressed', 'true');
-              updateToggleAppearance(true);
-            }
-
-            // Añadir listener para el toggle
-            darkModeToggle.addEventListener('click', function() {
-              const currentState = darkModeToggle.getAttribute('aria-pressed') === 'true';
-              const newState = !currentState;
-
-              // Cambiar clase en el html
-              if (newState) {
-                document.documentElement.classList.add('dark');
-              } else {
-                document.documentElement.classList.remove('dark');
-              }
-
-              // Guardar preferencia
-              localStorage.setItem('darkModeEnabled', newState);
-
-              // Actualizar estado del botón
-              darkModeToggle.setAttribute('aria-pressed', String(newState));
-              updateToggleAppearance(newState);
-            });
-
-            // Comprobar inicialmente
-            const initialState = darkModeToggle.getAttribute('aria-pressed') === 'true';
-            updateToggleAppearance(initialState);
-          }
-
-          // Función para actualizar la apariencia del toggle
-          function updateToggleAppearance(isDark) {
-            const toggle = document.getElementById('dark-mode-toggle');
-            if (!toggle) return; // Evitar error si el elemento no existe
-
-            const toggleCircle = toggle.querySelector('span:not(.sr-only)');
-            if (!toggleCircle) return; // Evitar error si el elemento no existe
-
-            if (isDark) {
-              toggle.classList.add('bg-indigo-600');
-              toggle.classList.remove('bg-gray-200');
-              toggleCircle.classList.add('translate-x-5');
-              toggleCircle.classList.remove('translate-x-0');
-            } else {
-              toggle.classList.remove('bg-indigo-600');
-              toggle.classList.add('bg-gray-200');
-              toggleCircle.classList.remove('translate-x-5');
-              toggleCircle.classList.add('translate-x-0');
-            }
-
-            // Actualizar textos
-            const textLight = document.getElementById('text-light-mode');
-            const textDark = document.getElementById('text-dark-mode');
-
-            if (textLight && textDark) {
-              if (isDark) {
-                textLight.classList.add('text-gray-500');
-                textLight.classList.remove('text-indigo-600');
-                textDark.classList.add('text-indigo-600');
-                textDark.classList.remove('text-gray-500');
-              } else {
-                textLight.classList.add('text-indigo-600');
-                textLight.classList.remove('text-gray-500');
-                textDark.classList.add('text-gray-500');
-                textDark.classList.remove('text-indigo-600');
-              }
-            }
+          const checkbox = document.getElementById('dark-mode-checkbox');
+          if (checkbox) {
+            // Inicializar según localStorage
+            checkbox.checked = localStorage.getItem('darkMode') === 'dark';
           }
         });
 
-        // También aplicar el modo oscuro inmediatamente si está almacenado en localStorage
-        (function() {
-          if (localStorage.getItem('darkModeEnabled') === 'true') {
+        // Función global para cambiar el modo oscuro (llamada desde onclick)
+        function toggleDarkMode() {
+          const checkbox = document.getElementById('dark-mode-checkbox');
+          if (!checkbox) return;
+
+          console.log("Checkbox clicked, nuevo estado:", checkbox.checked);
+
+          if (checkbox.checked) {
             document.documentElement.classList.add('dark');
+            localStorage.setItem('darkMode', 'dark');
+            console.log("Modo oscuro activado");
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('darkMode', 'light');
+            console.log("Modo oscuro desactivado");
           }
-        })();
+        }
       </script>
     </div>
 
