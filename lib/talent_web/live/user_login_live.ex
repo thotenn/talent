@@ -26,7 +26,7 @@ defmodule TalentWeb.UserLoginLive do
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Iniciando sesión...">
+          <.button type="submit" phx-disable-with="Iniciando sesión...">
             Iniciar sesión <span aria-hidden="true">→</span>
           </.button>
         </:actions>
