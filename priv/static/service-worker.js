@@ -79,11 +79,13 @@ self.addEventListener('fetch', event => {
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
-              .then(cache => {
-                // No cachear solicitudes websockets o API
+            .then(cache => {
+                // Evitar cachear solicitudes con esquemas no soportados
+                if (event.request.url.startsWith('http')) {
                 console.log('Añadiendo a caché:', event.request.url);
                 cache.put(event.request, responseToCache);
-              });
+                }
+            });
 
             return response;
           })
