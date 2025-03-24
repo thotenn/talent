@@ -17,7 +17,7 @@ defmodule TalentWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt manifest.json service-worker.js)
 
   def router do
     quote do
@@ -89,6 +89,12 @@ defmodule TalentWeb do
       import Phoenix.HTML
       # Core UI components
       import TalentWeb.CoreComponents
+      # PWA install banner component
+      import TalentWeb.Components.PwaInstallBanner
+      # Mobile PWA detector
+      import TalentWeb.Components.MobilePwaBanner
+      # Botón de instalación directo
+      import TalentWeb.Components.InstallButton
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

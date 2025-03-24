@@ -44,3 +44,12 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Script para gestionar las actualizaciones del Service Worker
+if ('serviceWorker' in navigator) {
+  let refreshing;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+}

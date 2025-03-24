@@ -10,6 +10,10 @@ defmodule TalentWeb.UserSettingsLive do
       <:subtitle>Administra tu dirección de correo electrónico y contraseña</:subtitle>
     </.header>
 
+    <div class="block md:hidden">
+      <.install_button />
+    </div>
+
     <div class="space-y-12 divide-y">
       <div>
         <.simple_form

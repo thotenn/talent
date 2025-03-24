@@ -18,6 +18,25 @@ mix run priv/repo/seeds.exs
 mix phx.server
 
 
+### LIMPIAR CACHE EN PRODUCCION
+# Limpiar todo
+mix deps.clean --all
+mix clean
+mix phx.digest.clean
+
+# Reconstruir
+mix deps.get
+mix compile
+cd assets && npm install && cd ..  # Si usas npm para gestionar activos
+mix assets.deploy  # O el comando equivalente en tu aplicación
+
+
+### LIMPIAR CACHE EN LOCAL
+mix clean
+mix assets.setup
+mix assets.build
+
+
 
 
 

@@ -1,0 +1,294 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-4 bg-indigo-600 text-white">
+      <h1 class="text-2xl font-bold">Instalar Talent</h1>
+      <p class="text-indigo-100">
+        Accede a Talent directamente desde tu pantalla de inicio
+      </p>
+    </div>
+
+    <div class="px-6 py-4">
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-3">¿Por qué instalar Talent?</h2>
+        <ul class="space-y-2">
+          <li class="flex items-start">
+            <svg
+              class="h-5 w-5 text-indigo-500 mr-2 mt-0.5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              ><strong>Acceso rápido</strong> - Sin necesidad de abrir el
+              navegador y buscar la URL</span>
+            >
+          </li>
+          <li class="flex items-start">
+            <svg
+              class="h-5 w-5 text-indigo-500 mr-2 mt-0.5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              ><strong>Experiencia mejorada</strong> - Sin barras de navegación
+              del navegador</span>
+            >
+          </li>
+          <li class="flex items-start">
+            <svg
+              class="h-5 w-5 text-indigo-500 mr-2 mt-0.5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              ><strong>Funciona sin conexión</strong> - Accede a la aplicación
+              incluso cuando no tengas internet</span>
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div id="android-instructions" class="mb-8">
+        <h2 class="text-xl font-semibold mb-3">Cómo instalar en Android</h2>
+        <ol class="list-decimal pl-6 space-y-4">
+          <li>
+            <p>
+              Toca el menú (tres puntos) en la parte superior derecha de Chrome
+            </p>
+            <img
+              src="/images/pwa/android-menu.png"
+              alt="Menú de Chrome en Android"
+              class="mt-2 border rounded-lg max-w-xs"
+            />
+          </li>
+          <li>
+            <p>
+              Selecciona <strong>"Instalar aplicación"</strong> o
+              <strong>"Añadir a pantalla de inicio"</strong>
+            </p>
+            <img
+              src="/images/pwa/android-install.png"
+              alt="Opción de instalar aplicación"
+              class="mt-2 border rounded-lg max-w-xs"
+            />
+          </li>
+          <li>
+            <p>Confirma la instalación tocando <strong>"Instalar"</strong></p>
+          </li>
+        </ol>
+      </div>
+
+      <div id="ios-instructions" class="mb-8">
+        <h2 class="text-xl font-semibold mb-3">Cómo instalar en iPhone/iPad</h2>
+        <ol class="list-decimal pl-6 space-y-4">
+          <li>
+            <p>Toca el botón de compartir en Safari</p>
+            <div class="flex justify-center mt-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="44"
+                height="44"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="border rounded-lg p-2"
+              >
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+              </svg>
+            </div>
+          </li>
+          <li>
+            <p>
+              Desplázate hacia abajo y selecciona
+              <strong>"Añadir a pantalla de inicio"</strong>
+            </p>
+            <img
+              src="/images/pwa/ios-add-to-home.png"
+              alt="Añadir a pantalla de inicio en iOS"
+              class="mt-2 border rounded-lg max-w-xs mx-auto"
+            />
+          </li>
+          <li>
+            <p>
+              Pulsa <strong>"Añadir"</strong> en la esquina superior derecha
+            </p>
+          </li>
+        </ol>
+      </div>
+
+      <div class="text-center">
+        <button
+          id="pwa-install-button"
+          class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Instalar Talent
+        </button>
+        <p class="mt-4 text-sm text-gray-500">
+          Si no ves la opción de instalar, es posible que ya tengas la
+          aplicación instalada o que tu navegador no soporte PWAs.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const installButton = document.getElementById("pwa-install-button");
+    const androidInstructions = document.getElementById("android-instructions");
+    const iosInstructions = document.getElementById("ios-instructions");
+
+    // Detectar plataforma
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
+
+    // Detectar si ya está instalado
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      navigator.standalone ||
+      window.navigator.standalone;
+
+    // Mostrar/ocultar instrucciones según la plataforma
+    if (isIOS) {
+      if (androidInstructions) androidInstructions.style.display = "none";
+    } else if (isAndroid) {
+      if (iosInstructions) iosInstructions.style.display = "none";
+    }
+
+    // Ocultar el botón si ya está instalado
+    if (isStandalone && installButton) {
+      installButton.style.display = "none";
+      // Mostrar mensaje alternativo
+      const container = installButton.parentNode;
+      const installed = document.createElement("div");
+      installed.className = "p-4 bg-green-100 text-green-800 rounded-lg";
+      installed.innerHTML =
+        "✅ Talent ya está instalado en tu dispositivo. Puedes acceder desde el icono en tu pantalla de inicio.";
+      container.replaceChild(installed, installButton);
+    }
+
+    // Variable para el evento de instalación
+    let deferredPrompt;
+
+    // Capturar el evento beforeinstallprompt
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // El botón ya debería estar visible por defecto
+    });
+
+    // Configurar el botón de instalación
+    if (installButton) {
+      installButton.addEventListener("click", async () => {
+        if (isIOS) {
+          // En iOS, destacar las instrucciones
+          if (iosInstructions) {
+            iosInstructions.scrollIntoView({ behavior: "smooth" });
+            iosInstructions.classList.add(
+              "bg-yellow-50",
+              "p-4",
+              "rounded-lg",
+              "border",
+              "border-yellow-200"
+            );
+            setTimeout(() => {
+              iosInstructions.classList.remove(
+                "bg-yellow-50",
+                "p-4",
+                "rounded-lg",
+                "border",
+                "border-yellow-200"
+              );
+            }, 3000);
+          }
+          return;
+        }
+
+        if (!deferredPrompt) {
+          // Si no tenemos el evento, destacar las instrucciones de Android
+          if (androidInstructions) {
+            androidInstructions.scrollIntoView({ behavior: "smooth" });
+            androidInstructions.classList.add(
+              "bg-yellow-50",
+              "p-4",
+              "rounded-lg",
+              "border",
+              "border-yellow-200"
+            );
+            setTimeout(() => {
+              androidInstructions.classList.remove(
+                "bg-yellow-50",
+                "p-4",
+                "rounded-lg",
+                "border",
+                "border-yellow-200"
+              );
+            }, 3000);
+          }
+          return;
+        }
+
+        // Mostrar el prompt de instalación
+        deferredPrompt.prompt();
+
+        // Esperar la respuesta del usuario
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Resultado de instalación: ${outcome}`);
+
+        // Si se instala, quitar el botón
+        if (outcome === "accepted") {
+          installButton.style.display = "none";
+          // Mostrar mensaje de éxito
+          const container = installButton.parentNode;
+          const success = document.createElement("div");
+          success.className = "p-4 bg-green-100 text-green-800 rounded-lg";
+          success.innerHTML =
+            "✅ Talent se ha instalado con éxito. ¡Gracias por instalar nuestra aplicación!";
+          container.replaceChild(success, installButton);
+        }
+
+        // Limpiar la referencia
+        deferredPrompt = null;
+      });
+    }
+  });
+</script>
