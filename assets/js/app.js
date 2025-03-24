@@ -45,11 +45,18 @@ liveSocket.connect()
 window.liveSocket = liveSocket
 
 // Script para gestionar las actualizaciones del Service Worker
-if ('serviceWorker' in navigator) {
-  let refreshing;
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
-}
+// if ('serviceWorker' in navigator) {
+//   let refreshing;
+//   navigator.serviceWorker.addEventListener('controllerchange', function() {
+//     if (refreshing) return;
+//     refreshing = true;
+//     window.location.reload();
+//   });
+// }
+
+
+// navigator.serviceWorker.getRegistrations().then(function(registrations) {
+//   for(let registration of registrations) {
+//     registration.unregister();
+//   }
+// });
