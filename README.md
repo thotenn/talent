@@ -20,9 +20,7 @@ mix phx.server
 
 ### LIMPIAR CACHE EN PRODUCCION
 # Limpiar todo
-mix deps.clean --all
-mix clean
-mix phx.digest.clean
+mix deps.clean --all && mix clean && mix phx.digest.clean && rm -rf _build
 
 # Reconstruir
 mix deps.get
@@ -35,6 +33,26 @@ mix assets.deploy  # O el comando equivalente en tu aplicación
 mix clean
 mix assets.setup
 mix assets.build
+
+
+### Luego de actualizar el repositorio en produccion
+
+sudo systemctl stop talent
+source .env
+mix deps.get && MIX_ENV=prod mix compile && MIX_ENV=prod mix ecto.migrate && MIX_ENV=prod mix assets.deploy && MIX_ENV=prod mix phx.digest
+mix phx.gen.release
+mix release
+sudo systemctl daemon-reload
+sudo systemctl start talent
+
+# Manera mas rapida
+mix phx.gen.release && mix release && sudo systemctl daemon-reload && sudo systemctl restart talent
+
+
+# Si no se actualiza correctamente hacer esto, y luego lo de arriba
+mix clean
+# o más agresivo:
+rm -rf _build
 
 
 
