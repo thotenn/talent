@@ -4,7 +4,11 @@ defmodule TalentWeb.UserLoginLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <.header class="text-center">
+      <div class="flex items-center justify-center">
+        <img src="/images/logo_big.png" alt="Talent" class="h-28 w-auto" title="Talent" />
+      </div>
+
+      <.header class="text-center mt-4">
         Iniciar sesión
         <:subtitle>
           No tienes una cuenta?
@@ -38,6 +42,6 @@ defmodule TalentWeb.UserLoginLive do
   def mount(_params, _session, socket) do
     email = Phoenix.Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
-    {:ok, assign(socket, form: form), temporary_assigns: [form: form]}
+    {:ok, assign(socket, form: form, show_nav: false), temporary_assigns: [form: form]}
   end
 end

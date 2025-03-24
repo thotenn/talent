@@ -43,7 +43,7 @@ defmodule TalentWeb.DashboardLive do
           <span class="font-medium">{String.capitalize(@user_role)}</span>
         </p>
 
-        <div class="mt-6">
+        <div class="mt-6 dark:text-black">
           <%= case @user_role do %>
             <% "administrador" -> %>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
