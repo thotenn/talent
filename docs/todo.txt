@@ -21,8 +21,6 @@ Permitir que los jueces puedan solicitar descalificacion,
 
 -- Boton "ASIGNAR TODAS" cuando se asigna criterios y categorias a cada jurado
 
--- Cuando se esta logueando, que se desactive el boton Iniciar sesion
-
 
 
 
