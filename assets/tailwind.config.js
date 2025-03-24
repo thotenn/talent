@@ -11,6 +11,7 @@ module.exports = {
     "../lib/talent_web.ex",
     "../lib/talent_web/**/*.*ex"
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

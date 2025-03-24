@@ -17,55 +17,55 @@
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
-    <!-- <script>
-      Comentamos esto temporalmente ya que produce un error al cerrar sesion
-      // Registrar el Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(function(registration) {
-              console.log('Service Worker registrado con éxito:', registration.scope);
-            })
-            .catch(function(error) {
-              console.log('Registro de Service Worker fallido:', error);
-            });
-        });
-      }
-    </script> -->
+    <script>
+      // // Comentamos esto temporalmente ya que produce un error al cerrar sesion
+      // // Registrar el Service Worker
+      // if ('serviceWorker' in navigator) {
+      //   window.addEventListener('load', function() {
+      //     navigator.serviceWorker.register('/service-worker.js')
+      //       .then(function(registration) {
+      //         console.log('Service Worker registrado con éxito:', registration.scope);
+      //       })
+      //       .catch(function(error) {
+      //         console.log('Registro de Service Worker fallido:', error);
+      //       });
+      //   });
+      // }
+    </script>
   </head>
-  <body class="bg-white">
-    <div class="z-10 fixed top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 bg-white shadow-sm">
+  <body class="bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div class="z-10 fixed top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200">
       <.link navigate={if @current_user, do: ~p"/dashboard", else: ~p"/users/log_in"} class="flex items-center gap-2">
         <img src={~p"/images/logo.png"} width="36" />
-        <span class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold">Inicio</span>
+        <span class="text-[0.8125rem] leading-6 text-zinc-900 dark:text-white font-semibold">Inicio</span>
       </.link>
       <ul class="flex items-center gap-4">
         <%= if @current_user do %>
-          <li class="text-[0.8125rem] leading-6 text-gray-400">
+          <li class="text-[0.8125rem] leading-6 text-gray-400 dark:text-gray-300">
             {@current_user.email}
           </li>
           <li>
             <.link
               navigate={~p"/users/settings"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-900 dark:text-white font-semibold hover:text-zinc-700 dark:hover:text-gray-300"
             >
-              <.svgicon name="settings" class="w-6 h-6 inline-block text-sky-800" title="Configuración" tooltip_class="bg-gray-800 text-white top-8 -translate-x-50" />
+              <.svgicon name="settings" class="w-6 h-6 inline-block text-sky-800 dark:text-sky-400" title="Configuración" tooltip_class="bg-gray-800 text-white top-8 -translate-x-50" />
             </.link>
           </li>
           <li>
             <.link
               navigate={~p"/users/log_out"}
               method="delete"
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-900 dark:text-white font-semibold hover:text-zinc-700 dark:hover:text-gray-300"
             >
-              <.svgicon name="log-out" class="w-6 h-6 inline-block text-rose-800" title="Cerrar sesión" tooltip_class="bg-gray-800 text-white top-8 -right-15" />
+              <.svgicon name="log-out" class="w-6 h-6 inline-block text-rose-800 dark:text-rose-400" title="Cerrar sesión" tooltip_class="bg-gray-800 text-white top-8 -right-15" />
             </.link>
           </li>
         <% else %>
           <li>
             <.link
               navigate={~p"/users/register"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-900 dark:text-white font-semibold hover:text-zinc-700 dark:hover:text-gray-300"
             >
               Registrarse
             </.link>
@@ -73,7 +73,7 @@
           <li>
             <.link
               navigate={~p"/users/log_in"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="text-[0.8125rem] leading-6 text-zinc-900 dark:text-white font-semibold hover:text-zinc-700 dark:hover:text-gray-300"
             >
               Iniciar sesión
             </.link>

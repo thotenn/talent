@@ -105,4 +105,12 @@ Hooks.SyncInputs = {
   }
 };
 
+// Agregar este hook al archivo hooks.js existente
+
+// Hook para manejar el modo oscuro
+Hooks.DarkMode = {
+  mounted() {
+  }
+};
+
 export default Hooks;
