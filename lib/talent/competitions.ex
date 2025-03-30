@@ -475,4 +475,93 @@ defmodule Talent.Competitions do
     |> where([cj], cj.judge_id == ^judge_id and cj.category_id == ^category_id)
     |> Repo.exists?()
   end
+
+  @doc """
+  Creates a participant with person information if provided.
+  """
+  def create_participant_with_person(attrs \\ %{}) do
+    Repo.transaction(fn ->
+      # Extraer datos de persona si están presentes
+      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+
+      # Crear primero el participante
+      case create_participant(attrs) do
+        {:ok, participant} ->
+          # Si hay datos de persona, crear o actualizar la persona
+          if is_map(person_data) && map_size(person_data) > 0 do
+            # Crear nueva persona
+            case Talent.Directory.create_person_info(person_data) do
+              {:ok, person} ->
+                # Asociar la persona al participante
+                {:ok, updated_participant} = update_participant(participant, %{person_id: person.id})
+                updated_participant
+              {:error, changeset} ->
+                Repo.rollback(changeset)
+            end
+          else
+            participant
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  @doc """
+  Updates a participant with person information if provided.
+  """
+  def update_participant_with_person(%Participant{} = participant, attrs) do
+    Repo.transaction(fn ->
+      # Extraer datos de persona si están presentes
+      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+
+      # Actualizar primero el participante
+      case update_participant(participant, attrs) do
+        {:ok, updated_participant} ->
+          # Si hay datos de persona, crear o actualizar la persona
+          if is_map(person_data) && map_size(person_data) > 0 do
+            # Verificar si ya hay una persona asociada
+            if updated_participant.person_id do
+              # Actualizar persona existente
+              person = Talent.Directory.get_person_info!(updated_participant.person_id)
+              {:ok, _updated_person} = Talent.Directory.update_person_info(person, person_data)
+            else
+              # Crear nueva persona
+              case Talent.Directory.create_person_info(person_data) do
+                {:ok, person} ->
+                  # Asociar la persona al participante
+                  {:ok, participant_with_person} = update_participant(updated_participant, %{person_id: person.id})
+                  participant_with_person
+                {:error, changeset} ->
+                  Repo.rollback(changeset)
+              end
+            end
+          else
+            updated_participant
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  @doc """
+  Gets a participant with preloaded person information.
+  """
+  def get_participant_with_person!(id) do
+    Participant
+    |> Repo.get!(id)
+    |> Repo.preload([:category, person: [person_networks: :network]])
+  end
+
+  @doc """
+  Lists participants with preloaded person information.
+  """
+  def list_participants_with_person do
+    Participant
+    |> Repo.all()
+    |> Repo.preload([:category, person: [person_networks: :network]])
+  end
 end

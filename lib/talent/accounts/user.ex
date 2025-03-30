@@ -10,6 +10,10 @@ defmodule Talent.Accounts.User do
     field :role, :string, default: "secretario"
 
     has_one :judge, Talent.Competitions.Judge
+    belongs_to :person, Talent.Directory.PersonInfo
+
+    # Campos virtuales para manejar personas en el mismo formulario
+    field :person_data, :map, virtual: true
 
     timestamps()
   end
@@ -134,6 +138,17 @@ defmodule Talent.Accounts.User do
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:email, :role])
+    |> cast_person(attrs)
     |> validate_required([:email, :role])
+  end
+
+  defp cast_person(changeset, attrs) do
+    person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+
+    if is_map(person_data) && map_size(person_data) > 0 do
+      changeset |> put_change(:person_data, person_data)
+    else
+      changeset
+    end
   end
 end

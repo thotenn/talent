@@ -83,6 +83,18 @@ defmodule TalentWeb.Router do
         live "/judges/:id", JudgeLive.Show, :show
         live "/judges/:id/assign_categories", JudgeLive.AssignCategories, :edit
         live "/category_judges", CategoryJudgeLive.Index, :index
+
+        # Gestión de redes sociales
+        live "/networks", NetworkLive.Index, :index
+        live "/networks/new", NetworkLive.Index, :new
+        live "/networks/:id/edit", NetworkLive.Index, :edit
+        live "/networks/:id", NetworkLive.Show, :show
+
+        # Gestión de personas
+        live "/people", PersonLive.Index, :index
+        live "/people/new", PersonLive.Index, :new
+        live "/people/:id/edit", PersonLive.Index, :edit
+        live "/people/:id", PersonLive.Show, :show
       end
 
       # Rutas para secretarios

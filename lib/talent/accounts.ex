@@ -468,4 +468,95 @@ defmodule Talent.Accounts do
     |> Ecto.Changeset.change(confirmed_at: nil)
     |> Repo.update()
   end
+
+  @doc """
+  Registers a user with person information if provided.
+  """
+  def register_user_with_person(attrs) do
+    Repo.transaction(fn ->
+      # Extraer datos de persona si están presentes
+      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+
+      # Crear primero el usuario
+      user_result = register_user(attrs)
+
+      case user_result do
+        {:ok, user} ->
+          # Si hay datos de persona, crear o actualizar la persona
+          if is_map(person_data) && map_size(person_data) > 0 do
+            # Verificar si ya hay una persona asociada
+            if user.person_id do
+              # Actualizar persona existente
+              person = Talent.Directory.get_person_info!(user.person_id)
+              {:ok, _updated_person} = Talent.Directory.update_person_info(person, person_data)
+            else
+              # Crear nueva persona
+              case Talent.Directory.create_person_info(person_data) do
+                {:ok, person} ->
+                  # Asociar la persona al usuario
+                  {:ok, updated_user} = update_user(user, %{person_id: person.id})
+                  updated_user
+                {:error, changeset} ->
+                  Repo.rollback(changeset)
+              end
+            end
+          else
+            user
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  @doc """
+  Updates a user with person information if provided.
+  """
+  def update_user_with_person(user, attrs) do
+    Repo.transaction(fn ->
+      # Extraer datos de persona si están presentes
+      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+
+      # Actualizar primero el usuario
+      user_result = update_user(user, attrs)
+
+      case user_result do
+        {:ok, updated_user} ->
+          # Si hay datos de persona, crear o actualizar la persona
+          if is_map(person_data) && map_size(person_data) > 0 do
+            # Verificar si ya hay una persona asociada
+            if updated_user.person_id do
+              # Actualizar persona existente
+              person = Talent.Directory.get_person_info!(updated_user.person_id)
+              {:ok, _updated_person} = Talent.Directory.update_person_info(person, person_data)
+            else
+              # Crear nueva persona
+              case Talent.Directory.create_person_info(person_data) do
+                {:ok, person} ->
+                  # Asociar la persona al usuario
+                  {:ok, user_with_person} = update_user(updated_user, %{person_id: person.id})
+                  user_with_person
+                {:error, changeset} ->
+                  Repo.rollback(changeset)
+              end
+            end
+          else
+            updated_user
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  @doc """
+  Gets a user with preloaded person information.
+  """
+  def get_user_with_person!(id) do
+    User
+    |> Repo.get!(id)
+    |> Repo.preload(person: [person_networks: :network])
+  end
 end

@@ -8,10 +8,26 @@
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Email"><%= @user.email %></:item>
-  <:item title="Rol"><%= @user.role %></:item>
-</.list>
+<div class="space-y-8 mt-8">
+  <.list>
+    <:item title="Email"><%= @user.email %></:item>
+    <:item title="Rol"><%= String.capitalize(@user.role) %></:item>
+    <:item title="Estado">
+      <%= if @user.confirmed_at, do: "Confirmado", else: "Pendiente" %>
+    </:item>
+  </.list>
+
+  <%= cond do %>
+    <% is_nil(@user.person) -> %>
+      <!-- No hay persona asociada -->
+    <% is_struct(@user.person, Ecto.Association.NotLoaded) -> %>
+      <!-- La asociación existe pero no está cargada -->
+    <% true -> %>
+      <div class="mt-10">
+        <.person_detail person={@user.person} />
+      </div>
+  <% end %>
+</div>
 
 <.back navigate={~p"/admin/users"}>Volver a la lista de usuarios</.back>
 

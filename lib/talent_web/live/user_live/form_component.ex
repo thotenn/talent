@@ -2,7 +2,7 @@ defmodule TalentWeb.UserLive.FormComponent do
   use TalentWeb, :live_component
 
   alias Talent.Accounts
-  alias Talent.Competitions
+  import TalentWeb.Components.PersonForm
 
   @impl true
   def render(assigns) do
@@ -28,6 +28,10 @@ defmodule TalentWeb.UserLive.FormComponent do
           {"Escribana", "escribana"}
         ]} />
         <.input field={@form[:password]} type="password" label="Contraseña" phx-debounce="blur" />
+
+        <!-- Información personal -->
+        <.person_form_fields person={@user.person} field_name="person_data" />
+
         <:actions>
           <.button phx-disable-with="Guardando...">Guardar Usuario</.button>
         </:actions>
@@ -38,6 +42,17 @@ defmodule TalentWeb.UserLive.FormComponent do
 
   @impl true
   def update(%{user: user} = assigns, socket) do
+    # Asegurarnos de que precarguemos la persona y sus redes sociales si existe
+    user = cond do
+      is_nil(user) ->
+        %Talent.Accounts.User{}
+      is_nil(user.id) ->
+        user
+      true ->
+        # Precargamos explícitamente la persona y sus redes
+        Accounts.get_user_with_person!(user.id)
+    end
+
     changeset = if user.id do
       Accounts.change_user(user)
     else
@@ -47,6 +62,7 @@ defmodule TalentWeb.UserLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:user, user)
      |> assign_form(changeset)}
   end
 
@@ -65,37 +81,47 @@ defmodule TalentWeb.UserLive.FormComponent do
     save_user(socket, socket.assigns.action, user_params)
   end
 
+  # Manejar eventos para añadir/eliminar redes sociales
+  def handle_event("add-network", %{"new_network_id" => network_id, "new_username" => username}, socket) when network_id != "" and username != "" do
+    # Añadimos la nueva red al formulario
+    networks_data = socket.assigns.form[:person_data][:networks_data] || []
+    new_network = %{
+      "network_id" => network_id,
+      "username" => username
+    }
+
+    updated_networks = networks_data ++ [new_network]
+
+    # Actualizar el form
+    updated_form = socket.assigns.form
+      |> Map.put(:person_data, Map.put(socket.assigns.form.person_data, :networks_data, updated_networks))
+
+    {:noreply, assign(socket, form: updated_form)}
+  end
+
+  def handle_event("add-network", _params, socket) do
+    # Datos incompletos, ignoramos
+    {:noreply, socket}
+  end
+
+  def handle_event("remove-network", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+    networks_data = socket.assigns.form[:person_data][:networks_data] || []
+
+    # Eliminar la red en el índice especificado
+    updated_networks = List.delete_at(networks_data, index)
+
+    # Actualizar el form
+    updated_form = socket.assigns.form
+      |> Map.put(:person_data, Map.put(socket.assigns.form.person_data, :networks_data, updated_networks))
+
+    {:noreply, assign(socket, form: updated_form)}
+  end
+
   defp save_user(socket, :edit, user_params) do
-    # Primero, actualizar los campos básicos (email, rol)
-    basic_params = Map.take(user_params, ["email", "role"])
-
-    case Accounts.update_user(socket.assigns.user, basic_params) do
+    case Accounts.update_user_with_person(socket.assigns.user, user_params) do
       {:ok, user} ->
-        # Si el rol es "jurado", asegurarse de que tenga un perfil de juez
-        if user.role == "jurado" do
-          ensure_judge_profile(user)
-        end
-
-        # Ahora, si se proporcionó una nueva contraseña, actualizarla
-        user_with_password_updated =
-          if user_params["password"] && String.trim(user_params["password"]) != "" do
-            password_params = %{
-              "password" => user_params["password"],
-              "password_confirmation" => user_params["password"]
-            }
-
-            case Accounts.reset_user_password(user, password_params) do
-              {:ok, updated_user} ->
-                updated_user
-              {:error, _changeset} ->
-                # En caso de error al cambiar la contraseña, seguimos con el usuario ya actualizado
-                user
-            end
-          else
-            user
-          end
-
-        notify_parent({:saved, user_with_password_updated})
+        notify_parent({:saved, user})
 
         {:noreply,
          socket
@@ -108,13 +134,8 @@ defmodule TalentWeb.UserLive.FormComponent do
   end
 
   defp save_user(socket, :new, user_params) do
-    case Accounts.register_user(user_params) do
+    case Accounts.register_user_with_person(user_params) do
       {:ok, user} ->
-        # Si el rol es "jurado", crear un perfil de juez
-        if user.role == "jurado" do
-          ensure_judge_profile(user)
-        end
-
         notify_parent({:saved, user})
 
         {:noreply,
@@ -124,22 +145,6 @@ defmodule TalentWeb.UserLive.FormComponent do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
-    end
-  end
-
-  defp ensure_judge_profile(user) do
-    # Verificar si ya existe un juez asociado
-    case Competitions.get_judge_by_user_id(user.id) do
-      nil ->
-        # No existe, crear uno nuevo usando el email como nombre por defecto
-        Competitions.create_judge(%{
-          name: user.email,
-          user_id: user.id
-        })
-
-      _judge ->
-        # Ya existe un juez, no hacer nada
-        {:ok, nil}
     end
   end
 

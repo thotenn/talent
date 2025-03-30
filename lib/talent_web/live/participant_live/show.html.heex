@@ -1,5 +1,5 @@
 <.header>
-  Participante {@participant.id}
+  Participante <%= @participant.id %>
   <:actions>
     <.link patch={~p"/secretary/participants/#{@participant}/edit"} phx-click={JS.push_focus()}>
       <.button>Editar participante</.button>
@@ -7,9 +7,23 @@
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Nombre">{@participant.name}</:item>
-</.list>
+<div class="space-y-8 mt-8">
+  <.list>
+    <:item title="Nombre"><%= @participant.name %></:item>
+    <:item title="Categoría"><%= @participant.category && @participant.category.name || "Sin categoría" %></:item>
+  </.list>
+
+  <%= cond do %>
+    <% is_nil(@participant.person) -> %>
+      <!-- No hay persona asociada -->
+    <% is_struct(@participant.person, Ecto.Association.NotLoaded) -> %>
+      <!-- La asociación existe pero no está cargada -->
+    <% true -> %>
+      <div class="mt-10">
+        <.person_detail person={@participant.person} />
+      </div>
+  <% end %>
+</div>
 
 <.back navigate={~p"/secretary/participants"}>Volver a participantes</.back>
 
@@ -20,6 +34,7 @@
     title={@page_title}
     action={@live_action}
     participant={@participant}
+    categories={@categories}
     patch={~p"/secretary/participants/#{@participant}"}
   />
 </.modal>
