@@ -13,10 +13,16 @@ defmodule Talent.Directory.PersonInfo do
     field :gender, :string
     field :extra_data, :string
 
-    many_to_many :networks, Talent.Directory.Network, join_through: Talent.Directory.PersonNetwork
-    has_many :person_networks, Talent.Directory.PersonNetwork, foreign_key: :person_id
+    # La relación many_to_many debe usar person_id como foreign_key
+    many_to_many :networks, Talent.Directory.Network,
+      join_through: Talent.Directory.PersonNetwork,
+      join_keys: [person_id: :id, network_id: :id]
 
-    # Para facilitar la creación de redes sociales en el mismo formulario
+    # Asegurarse de que esta relación use person_id y no person_info_id
+    has_many :person_networks, Talent.Directory.PersonNetwork,
+      foreign_key: :person_id
+
+    # Otras relaciones
     has_many :users, Talent.Accounts.User
     has_many :participants, Talent.Competitions.Participant
 

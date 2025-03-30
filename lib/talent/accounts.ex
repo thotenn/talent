@@ -473,82 +473,104 @@ defmodule Talent.Accounts do
   Registers a user with person information if provided.
   """
   def register_user_with_person(attrs) do
-    Repo.transaction(fn ->
-      # Extraer datos de persona si están presentes
-      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+    IO.puts("Recibido en register_user_with_person: #{inspect(attrs)}")
 
-      # Crear primero el usuario
-      user_result = register_user(attrs)
+    # Extraer datos de persona
+    person_data = case attrs do
+      %{"person_data" => pd} when is_map(pd) and map_size(pd) > 0 -> pd
+      %{person_data: pd} when is_map(pd) and map_size(pd) > 0 -> pd
+      _ -> nil
+    end
 
-      case user_result do
-        {:ok, user} ->
-          # Si hay datos de persona, crear o actualizar la persona
-          if is_map(person_data) && map_size(person_data) > 0 do
-            # Verificar si ya hay una persona asociada
-            if user.person_id do
-              # Actualizar persona existente
-              person = Talent.Directory.get_person_info!(user.person_id)
-              {:ok, _updated_person} = Talent.Directory.update_person_info(person, person_data)
-            else
-              # Crear nueva persona
-              case Talent.Directory.create_person_info(person_data) do
-                {:ok, person} ->
-                  # Asociar la persona al usuario
-                  {:ok, updated_user} = update_user(user, %{person_id: person.id})
-                  updated_user
-                {:error, changeset} ->
-                  Repo.rollback(changeset)
-              end
+    IO.puts("Person data extraído: #{inspect(person_data)}")
+
+    # Verificar que tenemos datos de persona válidos
+    if is_nil(person_data) or !Map.has_key?(person_data, "full_name") or String.trim(person_data["full_name"] || "") == "" do
+      # No hay datos válidos de persona, solo registrar el usuario
+      IO.puts("No hay datos válidos de persona, solo registrando usuario")
+      register_user(attrs)
+    else
+      Repo.transaction(fn ->
+        # Crear primero el usuario
+        case register_user(attrs) do
+          {:ok, user} ->
+            # Crear la persona
+            IO.puts("Usuario creado, ahora creando persona con: #{inspect(person_data)}")
+            case Talent.Directory.create_person_info(person_data) do
+              {:ok, person} ->
+                # Asociar la persona al usuario
+                IO.puts("Persona creada con ID: #{person.id}, actualizando usuario")
+                {:ok, updated_user} = update_user(user, %{person_id: person.id})
+                updated_user
+
+              {:error, changeset} ->
+                IO.puts("Error creating person: #{inspect(changeset)}")
+                Repo.rollback(changeset)
             end
-          else
-            user
-          end
 
-        {:error, changeset} ->
-          Repo.rollback(changeset)
-      end
-    end)
+          {:error, changeset} ->
+            IO.puts("Error registering user: #{inspect(changeset)}")
+            Repo.rollback(changeset)
+        end
+      end)
+    end
   end
 
   @doc """
   Updates a user with person information if provided.
   """
   def update_user_with_person(user, attrs) do
-    Repo.transaction(fn ->
-      # Extraer datos de persona si están presentes
-      person_data = Map.get(attrs, "person_data") || Map.get(attrs, :person_data)
+    IO.puts("Recibido en update_user_with_person: #{inspect(attrs)}")
 
-      # Actualizar primero el usuario
-      user_result = update_user(user, attrs)
+    # Extraer datos de persona de manera más robusta
+    person_data = case attrs do
+      %{"person_data" => pd} when is_map(pd) and map_size(pd) > 0 -> pd
+      %{person_data: pd} when is_map(pd) and map_size(pd) > 0 -> pd
+      _ -> nil
+    end
 
-      case user_result do
-        {:ok, updated_user} ->
-          # Si hay datos de persona, crear o actualizar la persona
-          if is_map(person_data) && map_size(person_data) > 0 do
-            # Verificar si ya hay una persona asociada
-            if updated_user.person_id do
-              # Actualizar persona existente
-              person = Talent.Directory.get_person_info!(updated_user.person_id)
-              {:ok, _updated_person} = Talent.Directory.update_person_info(person, person_data)
-            else
-              # Crear nueva persona
-              case Talent.Directory.create_person_info(person_data) do
-                {:ok, person} ->
-                  # Asociar la persona al usuario
-                  {:ok, user_with_person} = update_user(updated_user, %{person_id: person.id})
-                  user_with_person
-                {:error, changeset} ->
-                  Repo.rollback(changeset)
-              end
+    IO.puts("Person data extraído: #{inspect(person_data)}")
+
+    # Actualizar primero el usuario
+    case update_user(user, attrs) do
+      {:ok, updated_user} ->
+        # Si hay datos de persona válidos, crear o actualizar la persona
+        if is_map(person_data) && !is_nil(person_data) && Map.has_key?(person_data, "full_name") &&
+          String.trim(person_data["full_name"] || "") != "" do
+          # Verificar si ya hay una persona asociada
+          if updated_user.person_id do
+            # Actualizar persona existente
+            IO.puts("Actualizando persona existente con ID: #{updated_user.person_id}")
+            person = Talent.Directory.get_person_info!(updated_user.person_id)
+            case Talent.Directory.update_person_info(person, person_data) do
+              {:ok, _updated_person} -> {:ok, updated_user}
+              {:error, changeset} ->
+                IO.puts("Error updating person: #{inspect(changeset)}")
+                {:error, changeset}
             end
           else
-            updated_user
+            # Crear nueva persona
+            IO.puts("Creando nueva persona")
+            case Talent.Directory.create_person_info(person_data) do
+              {:ok, person} ->
+                # Asociar la persona al usuario
+                IO.puts("Persona creada con ID: #{person.id}, actualizando usuario")
+                update_user(updated_user, %{person_id: person.id})
+              {:error, changeset} ->
+                IO.puts("Error creating person: #{inspect(changeset)}")
+                {:error, changeset}
+            end
           end
+        else
+          # No hay datos de persona o son inválidos
+          IO.puts("No hay datos válidos de persona, solo actualizando usuario")
+          {:ok, updated_user}
+        end
 
-        {:error, changeset} ->
-          Repo.rollback(changeset)
-      end
-    end)
+      {:error, changeset} ->
+        IO.puts("Error updating user: #{inspect(changeset)}")
+        {:error, changeset}
+    end
   end
 
   @doc """
