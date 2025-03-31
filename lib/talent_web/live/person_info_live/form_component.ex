@@ -85,31 +85,34 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <.input
-                  field={@form[:"networks[#{i}][network_id]"]}
+                  field={@network_fields[i].network_id}
                   type="select"
                   label="Red Social"
                   options={@network_options}
                   prompt="Seleccionar red social"
                   name={"networks[#{i}][network_id]"}
+                  value={network.network_id}
                 />
               </div>
               <div>
                 <.input
-                  field={@form[:"networks[#{i}][username]"]}
+                  field={@network_fields[i].username}
                   type="text"
                   label="Usuario"
                   name={"networks[#{i}][username]"}
+                  value={network.username}
                 />
               </div>
             </div>
 
             <div class="mt-2">
               <.input
-                field={@form[:"networks[#{i}][url]"]}
+                field={@network_fields[i].url}
                 type="text"
                 label="URL"
                 placeholder="Se generará automáticamente si no se especifica"
                 name={"networks[#{i}][url]"}
+                value={network.url}
               />
             </div>
           </div>
@@ -130,8 +133,8 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
         %{
           id: pn.id,
           network_id: pn.network_id,
-          username: pn.username,
-          url: pn.url
+          username: pn.username || "",
+          url: pn.url || ""
         }
       end)
     else
@@ -153,74 +156,110 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
       extra_data: person_info.extra_data
     })
 
-    # Crear un form con redes preconfiguradas
-    form = to_form(changeset)
-    form = Enum.reduce(networks, form, fn network, acc ->
-      i = Enum.find_index(networks, &(&1.id == network.id)) || 0
-      acc
-      |> add_field_to_form(:"networks[#{i}][network_id]", network.network_id)
-      |> add_field_to_form(:"networks[#{i}][username]", network.username)
-      |> add_field_to_form(:"networks[#{i}][url]", network.url)
-    end)
+    # Crear campos para las redes sociales
+    network_fields = create_network_fields(networks)
 
     {:ok,
      socket
      |> assign(assigns)
      |> assign(:networks, networks)
      |> assign(:network_options, network_options)
-     |> assign(:form, form)}
+     |> assign(:network_fields, network_fields)
+     |> assign(:form, to_form(changeset))}
   end
 
-  # Función auxiliar para añadir un campo al form
-  defp add_field_to_form(form, field_name, value) do
-    %{form | source: Map.put(form.source, field_name, value)}
-  end
+  # Crea los campos para las redes sociales
+  defp create_network_fields(networks) do
+    Enum.with_index(networks)
+    |> Enum.map(fn {network, i} ->
+      network_id_form = to_form(%{"value" => network.network_id})
+      username_form = to_form(%{"value" => network.username})
+      url_form = to_form(%{"value" => network.url})
 
-  @impl true
-  def handle_event("add-network", _, socket) do
-    networks = socket.assigns.networks ++ [%{id: nil, network_id: nil, username: "", url: ""}]
-
-    # Actualizar el formulario con el nuevo campo
-    i = length(socket.assigns.networks)
-    form = socket.assigns.form
-    |> add_field_to_form(:"networks[#{i}][network_id]", nil)
-    |> add_field_to_form(:"networks[#{i}][username]", "")
-    |> add_field_to_form(:"networks[#{i}][url]", "")
-
-    {:noreply,
-     socket
-     |> assign(:networks, networks)
-     |> assign(:form, form)}
-  end
-
-  @impl true
-  def handle_event("remove-network", %{"index" => index}, socket) do
-    index = String.to_integer(index)
-    networks = List.delete_at(socket.assigns.networks, index)
-
-    # Reconstruir el formulario con los networks actualizados
-    person_info = socket.assigns.person_info
-    changeset = PersonInfo.changeset(person_info, %{
-      full_name: person_info.full_name,
-      short_name: person_info.short_name,
-      phone: person_info.phone,
-      identity_number: person_info.identity_number,
-      birth_date: person_info.birth_date,
-      gender: person_info.gender,
-      extra_data: person_info.extra_data
-    })
-
-    form = to_form(changeset)
-    form = Enum.reduce(Enum.with_index(networks), form, fn {network, i}, acc ->
-      acc
-      |> add_field_to_form(:"networks[#{i}][network_id]", network.network_id)
-      |> add_field_to_form(:"networks[#{i}][username]", network.username)
-      |> add_field_to_form(:"networks[#{i}][url]", network.url)
+      {i, %{
+        network_id: network_id_form[:value],
+        username: username_form[:value],
+        url: url_form[:value]
+      }}
     end)
+    |> Map.new()
+  end
+
+  @impl true
+  def handle_event("add-network", params, socket) do
+    # Obtener y preservar los valores actuales de las redes existentes
+    updated_networks =
+      socket.assigns.networks
+      |> Enum.with_index()
+      |> Enum.map(fn {network, i} ->
+        network_id = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["network_id"]
+        username = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["username"]
+        url = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["url"]
+
+        %{
+          id: network.id,
+          network_id: parse_integer_or_default(network_id, network.network_id),
+          username: username || network.username || "",
+          url: url || network.url || ""
+        }
+      end)
+
+    # Añadir la nueva red
+    networks = updated_networks ++ [%{id: nil, network_id: nil, username: "", url: ""}]
+
+    # Actualizar los campos para todas las redes
+    network_fields = create_network_fields(networks)
 
     {:noreply,
      socket
      |> assign(:networks, networks)
-     |> assign(:form, form)}
+     |> assign(:network_fields, network_fields)}
   end
+
+  @impl true
+  def handle_event("remove-network", %{"index" => index_string} = params, socket) do
+    index = String.to_integer(index_string)
+
+    # Obtener y preservar los valores actuales de las redes
+    current_networks =
+      socket.assigns.networks
+      |> Enum.with_index()
+      |> Enum.map(fn {network, i} ->
+        network_id = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["network_id"]
+        username = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["username"]
+        url = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["url"]
+
+        %{
+          id: network.id,
+          network_id: parse_integer_or_default(network_id, network.network_id),
+          username: username || network.username || "",
+          url: url || network.url || ""
+        }
+      end)
+
+    # Eliminar la red en el índice especificado
+    networks = List.delete_at(current_networks, index)
+
+    # Actualizar los campos para las redes restantes
+    network_fields = create_network_fields(networks)
+
+    {:noreply,
+     socket
+     |> assign(:networks, networks)
+     |> assign(:network_fields, network_fields)}
+  end
+
+  # Funciones auxiliares
+
+  # Parsea un string a integer, devolviendo un valor por defecto si falla
+  defp parse_integer_or_default(nil, default), do: default
+  defp parse_integer_or_default("", default), do: default
+  defp parse_integer_or_default(string, default) when is_binary(string) do
+    case Integer.parse(string) do
+      {number, _} -> number
+      :error -> default
+    end
+  end
+  defp parse_integer_or_default(value, _default) when is_integer(value), do: value
+  defp parse_integer_or_default(_, default), do: default
 end
