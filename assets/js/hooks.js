@@ -113,4 +113,32 @@ Hooks.DarkMode = {
   }
 };
 
+Hooks.SaveFieldValue = {
+  mounted() {
+    // Guardar el valor inicial
+    this.storeValue();
+    
+    // Configurar listener para cambios
+    this.el.addEventListener("input", () => {
+      this.storeValue();
+    });
+    
+    // Configurar listener para el evento de restauración
+    this.handleEvent("restore-field-values", () => {
+      // No hacemos nada aquí, los valores ya están en el DOM
+    });
+  },
+  
+  storeValue() {
+    // Almacenar el valor actual en el elemento
+    this.el.dataset.storedValue = this.el.value;
+    
+    // También enviamos el valor al servidor para que sea consciente del cambio
+    this.pushEvent("save-field-value", {
+      id: this.el.id,
+      value: this.el.value
+    });
+  }
+}
+
 export default Hooks;

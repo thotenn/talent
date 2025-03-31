@@ -56,8 +56,8 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
           <h2 class="text-lg font-semibold">Redes Sociales</h2>
           <button
             type="button"
-            phx-target={@myself}
             phx-click="add-network"
+            phx-target={@myself}
             class="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm"
           >
             + Añadir Red
@@ -72,9 +72,9 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
           <div class="border border-gray-200 rounded p-4 mb-4 relative">
             <button
               type="button"
-              phx-target={@myself}
               phx-click="remove-network"
               phx-value-index={i}
+              phx-target={@myself}
               class="absolute top-2 right-2 text-red-600 hover:text-red-800"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -84,35 +84,36 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <.input
-                  field={@network_fields[i].network_id}
-                  type="select"
-                  label="Red Social"
-                  options={@network_options}
-                  prompt="Seleccionar red social"
+                <label class="block text-sm font-medium text-gray-700 mb-1">Red Social</label>
+                <select
                   name={"networks[#{i}][network_id]"}
-                  value={network.network_id}
-                />
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
+                >
+                  <option value="">Seleccionar red social</option>
+                  <%= for {name, id} <- @network_options do %>
+                    <option value={id} selected={to_string(network.network_id) == to_string(id)}><%= name %></option>
+                  <% end %>
+                </select>
               </div>
               <div>
-                <.input
-                  field={@network_fields[i].username}
+                <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                <input
                   type="text"
-                  label="Usuario"
                   name={"networks[#{i}][username]"}
                   value={network.username}
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
                 />
               </div>
             </div>
 
             <div class="mt-2">
-              <.input
-                field={@network_fields[i].url}
+              <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+              <input
                 type="text"
-                label="URL"
-                placeholder="Se generará automáticamente si no se especifica"
                 name={"networks[#{i}][url]"}
                 value={network.url}
+                placeholder="Se generará automáticamente si no se especifica"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
               />
             </div>
           </div>
@@ -142,6 +143,9 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
       []
     end
 
+    # Si ya hay redes en el socket, usarlas en lugar de las cargadas
+    networks = if socket.assigns[:networks], do: socket.assigns.networks, else: networks
+
     # Obtener todas las redes disponibles para el dropdown
     network_options = Accounts.list_networks() |> Enum.map(fn n -> {n.name, n.id} end)
 
@@ -156,110 +160,35 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
       extra_data: person_info.extra_data
     })
 
-    # Crear campos para las redes sociales
-    network_fields = create_network_fields(networks)
-
     {:ok,
      socket
      |> assign(assigns)
      |> assign(:networks, networks)
      |> assign(:network_options, network_options)
-     |> assign(:network_fields, network_fields)
      |> assign(:form, to_form(changeset))}
   end
 
-  # Crea los campos para las redes sociales
-  defp create_network_fields(networks) do
-    Enum.with_index(networks)
-    |> Enum.map(fn {network, i} ->
-      network_id_form = to_form(%{"value" => network.network_id})
-      username_form = to_form(%{"value" => network.username})
-      url_form = to_form(%{"value" => network.url})
+  @impl true
+  def handle_event("add-network", _params, socket) do
+    # Obtener redes actuales
+    current_networks = socket.assigns.networks
 
-      {i, %{
-        network_id: network_id_form[:value],
-        username: username_form[:value],
-        url: url_form[:value]
-      }}
-    end)
-    |> Map.new()
+    # Añadir una nueva red vacía
+    networks = current_networks ++ [%{id: nil, network_id: nil, username: "", url: ""}]
+
+    {:noreply, assign(socket, :networks, networks)}
   end
 
   @impl true
-  def handle_event("add-network", params, socket) do
-    # Obtener y preservar los valores actuales de las redes existentes
-    updated_networks =
-      socket.assigns.networks
-      |> Enum.with_index()
-      |> Enum.map(fn {network, i} ->
-        network_id = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["network_id"]
-        username = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["username"]
-        url = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["url"]
-
-        %{
-          id: network.id,
-          network_id: parse_integer_or_default(network_id, network.network_id),
-          username: username || network.username || "",
-          url: url || network.url || ""
-        }
-      end)
-
-    # Añadir la nueva red
-    networks = updated_networks ++ [%{id: nil, network_id: nil, username: "", url: ""}]
-
-    # Actualizar los campos para todas las redes
-    network_fields = create_network_fields(networks)
-
-    {:noreply,
-     socket
-     |> assign(:networks, networks)
-     |> assign(:network_fields, network_fields)}
-  end
-
-  @impl true
-  def handle_event("remove-network", %{"index" => index_string} = params, socket) do
+  def handle_event("remove-network", %{"index" => index_string}, socket) do
     index = String.to_integer(index_string)
 
-    # Obtener y preservar los valores actuales de las redes
-    current_networks =
-      socket.assigns.networks
-      |> Enum.with_index()
-      |> Enum.map(fn {network, i} ->
-        network_id = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["network_id"]
-        username = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["username"]
-        url = params["networks"] && params["networks"]["#{i}"] && params["networks"]["#{i}"]["url"]
-
-        %{
-          id: network.id,
-          network_id: parse_integer_or_default(network_id, network.network_id),
-          username: username || network.username || "",
-          url: url || network.url || ""
-        }
-      end)
+    # Obtener redes actuales
+    current_networks = socket.assigns.networks
 
     # Eliminar la red en el índice especificado
     networks = List.delete_at(current_networks, index)
 
-    # Actualizar los campos para las redes restantes
-    network_fields = create_network_fields(networks)
-
-    {:noreply,
-     socket
-     |> assign(:networks, networks)
-     |> assign(:network_fields, network_fields)}
+    {:noreply, assign(socket, :networks, networks)}
   end
-
-  # Funciones auxiliares
-
-  # Parsea un string a integer, devolviendo un valor por defecto si falla
-  defp parse_integer_or_default(nil, default), do: default
-  defp parse_integer_or_default("", default), do: default
-  defp parse_integer_or_default(string, default) when is_binary(string) do
-    case Integer.parse(string) do
-      {number, _} -> number
-      :error -> default
-    end
-  end
-  defp parse_integer_or_default(value, _default) when is_integer(value), do: value
-  defp parse_integer_or_default(_, default), do: default
 end
