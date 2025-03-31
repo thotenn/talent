@@ -89,6 +89,14 @@ defmodule TalentWeb.DashboardLive do
                   <div class="text-xl mb-2">📊</div>
                   <div class="font-medium">Ver Resultados</div>
                 </.link>
+
+                <.link
+                  navigate={~p"/admin/networks"}
+                  class="bg-blue-100 hover:bg-blue-200 p-4 rounded-lg text-center"
+                >
+                  <div class="text-xl mb-2">🔗</div>
+                  <div class="font-medium">Redes Sociales</div>
+                </.link>
               </div>
             <% "jurado" -> %>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">

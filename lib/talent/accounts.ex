@@ -6,7 +6,7 @@ defmodule Talent.Accounts do
   import Ecto.Query, warn: false
   alias Talent.Repo
 
-  alias Talent.Accounts.{User, UserToken, UserNotifier}
+  alias Talent.Accounts.{User, UserToken, UserNotifier, Network, PersonInfo, PersonNetwork}
 
   ## Database getters
 
@@ -468,4 +468,53 @@ defmodule Talent.Accounts do
     |> Ecto.Changeset.change(confirmed_at: nil)
     |> Repo.update()
   end
+
+  #
+  # Network functions
+  #
+  @doc """
+  Returns the list of networks.
+  """
+  def list_networks do
+    Repo.all(Network)
+  end
+
+  @doc """
+  Gets a single network.
+  """
+  def get_network!(id), do: Repo.get!(Network, id)
+
+  @doc """
+  Creates a network.
+  """
+  def create_network(attrs \\ %{}) do
+    %Network{}
+    |> Network.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a network.
+  """
+  def update_network(%Network{} = network, attrs) do
+    network
+    |> Network.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a network.
+  """
+  def delete_network(%Network{} = network) do
+    Repo.delete(network)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking network changes.
+  """
+  def change_network(%Network{} = network, attrs \\ %{}) do
+    Network.changeset(network, attrs)
+  end
+
+
 end
