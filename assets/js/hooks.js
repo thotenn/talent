@@ -141,4 +141,44 @@ Hooks.SaveFieldValue = {
   }
 }
 
+Hooks.NetworkFormFields = {
+  mounted() {
+    // Seleccionar todos los campos de redes sociales en este componente
+    const inputs = this.el.querySelectorAll('input, select');
+    
+    // Configurar listeners para cada campo
+    inputs.forEach(input => {
+      input.addEventListener('change', () => {
+        // Obtener todos los valores actuales
+        this.saveNetworkValues();
+      });
+      
+      // Para inputs de texto, también capturar mientras se escribe
+      if (input.type === 'text') {
+        input.addEventListener('input', () => {
+          this.saveNetworkValues();
+        });
+      }
+    });
+  },
+  
+  // Método para enviar los valores de la red actual al servidor
+  saveNetworkValues() {
+    const index = this.el.dataset.index;
+    const networkId = this.el.querySelector('[name$="[network_id]"]').value;
+    const username = this.el.querySelector('[name$="[username]"]').value;
+    const url = this.el.querySelector('[name$="[url]"]').value;
+    
+    // Aquí está el cambio clave: dirigir el evento al componente correcto
+    this.pushEventTo(this.el.closest('[phx-target]'), 'update-network', {
+      index: index,
+      data: {
+        network_id: networkId,
+        username: username,
+        url: url
+      }
+    });
+  }
+};
+
 export default Hooks;

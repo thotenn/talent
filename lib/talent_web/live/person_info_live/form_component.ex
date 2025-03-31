@@ -8,7 +8,7 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div phx-target={@myself}>
       <h2 class="text-lg font-semibold mb-4"><%= @title || "Información Personal" %></h2>
 
       <div class="bg-white rounded-lg">
@@ -68,56 +68,64 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
           <p class="text-gray-500 italic mb-4">No hay redes sociales registradas.</p>
         <% end %>
 
-        <%= for {network, i} <- Enum.with_index(@networks) do %>
-          <div class="border border-gray-200 rounded p-4 mb-4 relative">
-            <button
-              type="button"
-              phx-click="remove-network"
-              phx-value-index={i}
-              phx-target={@myself}
-              class="absolute top-2 right-2 text-red-600 hover:text-red-800"
+        <div id="networks-container">
+          <%= for {network, i} <- Enum.with_index(@networks) do %>
+            <div
+              id={"network-#{i}"}
+              class="border border-gray-200 rounded p-4 mb-4 relative"
+              phx-hook="NetworkFormFields"
+              data-index={i}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
+              <button
+                type="button"
+                phx-click="remove-network"
+                phx-value-index={i}
+                phx-target={@myself}
+                class="absolute top-2 right-2 text-red-600 hover:text-red-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Red Social</label>
-                <select
-                  name={"networks[#{i}][network_id]"}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
-                >
-                  <option value="">Seleccionar red social</option>
-                  <%= for {name, id} <- @network_options do %>
-                    <option value={id} selected={to_string(network.network_id) == to_string(id)}><%= name %></option>
-                  <% end %>
-                </select>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Red Social</label>
+                  <select
+                    name={"networks[#{i}][network_id]"}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
+                    value={network.network_id}
+                  >
+                    <option value="">Seleccionar red social</option>
+                    <%= for {name, id} <- @network_options do %>
+                      <option value={id} selected={to_string(network.network_id) == to_string(id)}><%= name %></option>
+                    <% end %>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                  <input
+                    type="text"
+                    name={"networks[#{i}][username]"}
+                    value={network.username}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
+                  />
+                </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+
+              <div class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
                 <input
                   type="text"
-                  name={"networks[#{i}][username]"}
-                  value={network.username}
+                  name={"networks[#{i}][url]"}
+                  value={network.url}
+                  placeholder="Se generará automáticamente si no se especifica"
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div class="mt-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-              <input
-                type="text"
-                name={"networks[#{i}][url]"}
-                value={network.url}
-                placeholder="Se generará automáticamente si no se especifica"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0 sm:text-sm"
-              />
-            </div>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
     </div>
     """
@@ -190,5 +198,38 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
     networks = List.delete_at(current_networks, index)
 
     {:noreply, assign(socket, :networks, networks)}
+  end
+
+  @impl true
+  def handle_event("update-network", %{"index" => index, "data" => data}, socket) do
+    index =
+      case index do
+        idx when is_binary(idx) -> String.to_integer(idx)
+        idx when is_integer(idx) -> idx
+      end
+
+    # Convertir network_id a entero si es posible
+    network_id =
+      case data["network_id"] do
+        id when id in ["", nil] -> nil
+        id ->
+          case Integer.parse(id) do
+            {num, _} -> num
+            :error -> id
+          end
+      end
+
+    # Actualizar la red específica
+    updated_networks =
+      List.update_at(socket.assigns.networks, index, fn network ->
+        %{
+          id: network.id,
+          network_id: network_id,
+          username: data["username"],
+          url: data["url"]
+        }
+      end)
+
+    {:noreply, assign(socket, :networks, updated_networks)}
   end
 end
