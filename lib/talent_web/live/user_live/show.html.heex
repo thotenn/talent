@@ -8,10 +8,106 @@
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Email"><%= @user.email %></:item>
-  <:item title="Rol"><%= @user.role %></:item>
-</.list>
+<div class="space-y-8">
+  <div class="bg-white shadow-md rounded-lg p-6">
+    <h3 class="text-lg font-semibold mb-4">Información del Usuario</h3>
+    
+    <.list>
+      <:item title="Email"><%= @user.email %></:item>
+      <:item title="Rol"><%= @user.role %></:item>
+      <:item title="Estado"><%= if @user.confirmed_at, do: "Confirmado", else: "Pendiente" %></:item>
+      <:item title="Fecha de confirmación">
+        <%= if @user.confirmed_at do %>
+          <%= @user.confirmed_at %>
+        <% else %>
+          <span class="text-gray-400">No confirmado</span>
+        <% end %>
+      </:item>
+    </.list>
+  </div>
+
+  <%= if @user.person do %>
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">Información Personal</h3>
+      
+      <.list>
+        <:item title="Nombre Completo"><%= @user.person.full_name %></:item>
+        <:item title="Nombre Corto">
+          <%= if @user.person.short_name do %>
+            <%= @user.person.short_name %>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+        <:item title="Teléfono">
+          <%= if @user.person.phone do %>
+            <%= @user.person.phone %>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+        <:item title="Número de Identidad">
+          <%= if @user.person.identity_number do %>
+            <%= @user.person.identity_number %>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+        <:item title="Fecha de Nacimiento">
+          <%= if @user.person.birth_date do %>
+            <%= @user.person.birth_date %>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+        <:item title="Género">
+          <%= if @user.person.gender do %>
+            <%= @user.person.gender %>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+        <:item title="Información Adicional">
+          <%= if @user.person.extra_data do %>
+            <div class="whitespace-pre-line"><%= @user.person.extra_data %></div>
+          <% else %>
+            <span class="text-gray-400">-</span>
+          <% end %>
+        </:item>
+      </.list>
+    </div>
+
+    <%= if length(@networks) > 0 do %>
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Redes Sociales</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= for network <- @networks do %>
+            <div class="border rounded-lg p-4">
+              <div class="font-medium"><%= network.network.name %></div>
+              <div class="text-sm text-gray-600">Usuario: <%= network.username %></div>
+              <a href={network.url} target="_blank" class="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                <%= network.url %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="flex items-center space-x-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-gray-600">No hay información personal disponible para este usuario. Edite el usuario para añadir información personal.</p>
+      </div>
+    </div>
+  <% end %>
+</div>
 
 <.back navigate={~p"/admin/users"}>Volver a la lista de usuarios</.back>
 

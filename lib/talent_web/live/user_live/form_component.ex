@@ -3,6 +3,7 @@ defmodule TalentWeb.UserLive.FormComponent do
 
   alias Talent.Accounts
   alias Talent.Competitions
+  alias Talent.Accounts.{PersonInfo, PersonNetwork}
 
   @impl true
   def render(assigns) do
@@ -13,13 +14,7 @@ defmodule TalentWeb.UserLive.FormComponent do
         <:subtitle>Complete los datos del usuario</:subtitle>
       </.header>
 
-      <.simple_form
-        for={@form}
-        id="user-form"
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
+      <form id="user-form" phx-target={@myself} phx-submit="save">
         <.input field={@form[:email]} type="email" label="Email" />
         <.input field={@form[:role]} type="select" label="Rol" options={[
           {"Administrador", "administrador"},
@@ -27,17 +22,34 @@ defmodule TalentWeb.UserLive.FormComponent do
           {"Secretario", "secretario"},
           {"Escribana", "escribana"}
         ]} />
-        <.input field={@form[:password]} type="password" label="Contraseña" phx-debounce="blur" />
-        <:actions>
-          <.button phx-disable-with="Guardando...">Guardar Usuario</.button>
-        </:actions>
-      </.simple_form>
+        <.input field={@form[:password]} type="password" label="Contraseña" />
+
+        <div class="border-t border-gray-300 my-6 pt-6">
+          <.live_component
+            module={TalentWeb.PersonInfoLive.FormComponent}
+            id="person-info-form"
+            person_info={@person_info}
+            title="Información Personal"
+          />
+        </div>
+
+        <div class="mt-6">
+          <.button type="submit" phx-disable-with="Guardando...">Guardar Usuario</.button>
+        </div>
+      </form>
     </div>
     """
   end
 
   @impl true
   def update(%{user: user} = assigns, socket) do
+    # Cargar o crear la información personal relacionada con este usuario
+    person_info = if user.person_id do
+      Accounts.get_person_info!(user.person_id)
+    else
+      %PersonInfo{}
+    end
+
     changeset = if user.id do
       Accounts.change_user(user)
     else
@@ -47,37 +59,31 @@ defmodule TalentWeb.UserLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:person_info, person_info)
      |> assign_form(changeset)}
   end
 
   @impl true
-  def handle_event("validate", %{"user" => user_params}, socket) do
-    changeset = if socket.assigns.user.id do
-      Accounts.change_user(socket.assigns.user, user_params)
-    else
-      Accounts.change_user_registration(socket.assigns.user, user_params)
-    end
+  def handle_event("save", params, socket) do
+    user_params = Map.get(params, "user", %{})
+    person_info_params = Map.get(params, "person_info", %{})
+    networks_params = Map.get(params, "networks", %{})
 
-    {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
+    save_user(socket, socket.assigns.action, user_params, person_info_params, networks_params)
   end
 
-  def handle_event("save", %{"user" => user_params}, socket) do
-    save_user(socket, socket.assigns.action, user_params)
-  end
+  defp save_user(socket, :edit, user_params, person_info_params, networks_params) do
+    user = socket.assigns.user
 
-  defp save_user(socket, :edit, user_params) do
-    # Primero, actualizar los campos básicos (email, rol)
-    basic_params = Map.take(user_params, ["email", "role"])
+    # Eliminar campos vacíos de person_info_params
+    person_info_params = clean_empty_params(person_info_params)
 
-    case Accounts.update_user(socket.assigns.user, basic_params) do
-      {:ok, user} ->
-        # Si el rol es "jurado", asegurarse de que tenga un perfil de juez
-        if user.role == "jurado" do
-          ensure_judge_profile(user)
-        end
+    result = Accounts.update_user_with_person_info(user, user_params, person_info_params, networks_params)
 
-        # Ahora, si se proporcionó una nueva contraseña, actualizarla
-        user_with_password_updated =
+    case result do
+      {:ok, %{user: updated_user}} ->
+        # Si hay contraseña, actualizarla separadamente
+        updated_user =
           if user_params["password"] && String.trim(user_params["password"]) != "" do
             password_params = %{
               "password" => user_params["password"],
@@ -85,36 +91,42 @@ defmodule TalentWeb.UserLive.FormComponent do
             }
 
             case Accounts.reset_user_password(user, password_params) do
-              {:ok, updated_user} ->
-                updated_user
-              {:error, _changeset} ->
-                # En caso de error al cambiar la contraseña, seguimos con el usuario ya actualizado
-                user
+              {:ok, pw_updated_user} -> pw_updated_user
+              {:error, _changeset} -> updated_user
             end
           else
-            user
+            updated_user
           end
 
-        notify_parent({:saved, user_with_password_updated})
+        notify_parent({:saved, updated_user})
 
         {:noreply,
          socket
          |> put_flash(:info, "Usuario actualizado correctamente")
          |> push_patch(to: socket.assigns.patch)}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+      {:error, failed_operation, failed_value, _changes} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error al guardar: #{inspect(failed_operation)}")
+         |> assign_form(failed_value)}
+
+      error ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error inesperado: #{inspect(error)}")
+         |> assign_form(Accounts.change_user(user, user_params))}
     end
   end
 
-  defp save_user(socket, :new, user_params) do
-    case Accounts.register_user(user_params) do
-      {:ok, user} ->
-        # Si el rol es "jurado", crear un perfil de juez
-        if user.role == "jurado" do
-          ensure_judge_profile(user)
-        end
+  defp save_user(socket, :new, user_params, person_info_params, networks_params) do
+    # Eliminar campos vacíos de person_info_params
+    person_info_params = clean_empty_params(person_info_params)
 
+    result = Accounts.create_user_with_person_info(user_params, person_info_params, networks_params)
+
+    case result do
+      {:ok, %{user: user}} ->
         notify_parent({:saved, user})
 
         {:noreply,
@@ -122,8 +134,28 @@ defmodule TalentWeb.UserLive.FormComponent do
          |> put_flash(:info, "Usuario creado correctamente")
          |> push_patch(to: socket.assigns.patch)}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+      {:error, failed_operation, failed_value, _changes} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error al guardar: #{inspect(failed_operation)}")
+         |> assign_form(failed_value)}
+
+      error ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error inesperado: #{inspect(error)}")
+         |> assign_form(Accounts.change_user_registration(%Talent.Accounts.User{}, user_params))}
+    end
+  end
+
+  # Función para limpiar campos vacíos de los parámetros de person_info
+  defp clean_empty_params(params) do
+    if is_map(params) do
+      params
+      |> Enum.filter(fn {_k, v} -> v && v != "" end)
+      |> Map.new()
+    else
+      %{}
     end
   end
 

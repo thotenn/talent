@@ -6,7 +6,8 @@ defmodule TalentWeb.UserLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :users, Accounts.list_users())}
+    users = Accounts.list_users() |> Talent.Repo.preload(:person)
+    {:ok, stream(socket, :users, users)}
   end
 
   @impl true
@@ -15,9 +16,10 @@ defmodule TalentWeb.UserLive.Index do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
+    user = Accounts.get_user!(id) |> Talent.Repo.preload(:person)
     socket
     |> assign(:page_title, "Editar Usuario")
-    |> assign(:user, Accounts.get_user!(id))
+    |> assign(:user, user)
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,6 +36,7 @@ defmodule TalentWeb.UserLive.Index do
 
   @impl true
   def handle_info({TalentWeb.UserLive.FormComponent, {:saved, user}}, socket) do
+    user = Talent.Repo.preload(user, :person)
     {:noreply, stream_insert(socket, :users, user)}
   end
 
@@ -47,6 +50,7 @@ defmodule TalentWeb.UserLive.Index do
       |> Ecto.Changeset.change(confirmed_at: now)
       |> Talent.Repo.update()
 
+    updated_user = Talent.Repo.preload(updated_user, :person)
     {:noreply, stream_insert(socket, :users, updated_user)}
   end
 
@@ -56,6 +60,7 @@ defmodule TalentWeb.UserLive.Index do
 
     case Accounts.deactivate_user(user) do
       {:ok, updated_user} ->
+        updated_user = Talent.Repo.preload(updated_user, :person)
         {:noreply,
         socket
         |> put_flash(:info, "Usuario desactivado correctamente.")

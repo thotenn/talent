@@ -9,7 +9,12 @@ defmodule Talent.Accounts.User do
     field :confirmed_at, :naive_datetime
     field :role, :string, default: "secretario"
 
+    # Agregar relación con PersonInfo
+    belongs_to :person, Talent.Accounts.PersonInfo
     has_one :judge, Talent.Competitions.Judge
+
+    # Campo virtual para recibir datos de información personal en formularios
+    field :person_info, :map, virtual: true
 
     timestamps()
   end
@@ -19,7 +24,7 @@ defmodule Talent.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password, :role])
+    |> cast(attrs, [:email, :password, :role, :person_id])
     |> validate_email(opts)
     |> validate_password(opts)
     |> validate_inclusion(:role, ["administrador", "jurado", "secretario", "escribana"])
@@ -133,7 +138,7 @@ defmodule Talent.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :role])
+    |> cast(attrs, [:email, :role, :person_id])
     |> validate_required([:email, :role])
   end
 end

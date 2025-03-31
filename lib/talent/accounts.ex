@@ -516,5 +516,220 @@ defmodule Talent.Accounts do
     Network.changeset(network, attrs)
   end
 
+  # PersonInfo functions
+  @doc """
+  Returns the list of person_infos.
+  """
+  def list_person_infos do
+    Repo.all(PersonInfo)
+  end
 
+  @doc """
+  Gets a single person_info.
+  """
+  def get_person_info!(id), do: Repo.get!(PersonInfo, id) |> Repo.preload(:person_networks)
+
+  @doc """
+  Creates a person_info.
+  """
+  def create_person_info(attrs \\ %{}) do
+    %PersonInfo{}
+    |> PersonInfo.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a person_info.
+  """
+  def update_person_info(%PersonInfo{} = person_info, attrs) do
+    person_info
+    |> PersonInfo.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a person_info.
+  """
+  def delete_person_info(%PersonInfo{} = person_info) do
+    Repo.delete(person_info)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking person_info changes.
+  """
+  def change_person_info(%PersonInfo{} = person_info, attrs \\ %{}) do
+    PersonInfo.changeset(person_info, attrs)
+  end
+
+# Funciones simplificadas y robustas para agregar al final de lib/talent/accounts.ex
+
+  @doc """
+  Creates a person_info with associated networks.
+  """
+  def create_person_info_with_networks(person_info_params, networks_params) do
+    # Si no hay un nombre completo, no crear person_info
+    if is_nil(person_info_params) || is_nil(person_info_params["full_name"]) || person_info_params["full_name"] == "" do
+      {:ok, %{person_info: nil}}
+    else
+      # Insertar persona
+      person_info_changeset = PersonInfo.changeset(%PersonInfo{}, person_info_params)
+      case Repo.insert(person_info_changeset) do
+        {:ok, person_info} ->
+          # Crear redes sociales si existen
+          create_networks_for_person(person_info.id, networks_params)
+          {:ok, %{person_info: person_info}}
+
+        {:error, changeset} ->
+          {:error, :person_info, changeset, %{}}
+      end
+    end
+  end
+
+  @doc """
+  Updates a person_info with associated networks.
+  """
+  def update_person_info_with_networks(%PersonInfo{} = person_info, person_info_params, networks_params) do
+    # Si no hay un nombre completo, no actualizar
+    if is_nil(person_info_params) || is_nil(person_info_params["full_name"]) || person_info_params["full_name"] == "" do
+      {:ok, %{person_info: person_info}}
+    else
+      # Actualizar persona
+      person_info_changeset = PersonInfo.changeset(person_info, person_info_params)
+      case Repo.update(person_info_changeset) do
+        {:ok, updated_person_info} ->
+          # Eliminar redes existentes
+          Repo.delete_all(from pn in PersonNetwork, where: pn.person_id == ^updated_person_info.id)
+
+          # Crear nuevas redes
+          create_networks_for_person(updated_person_info.id, networks_params)
+          {:ok, %{person_info: updated_person_info}}
+
+        {:error, changeset} ->
+          {:error, :person_info, changeset, %{}}
+      end
+    end
+  end
+
+  # Crear redes sociales para una persona
+  defp create_networks_for_person(person_id, networks_params) do
+    if is_map(networks_params) && map_size(networks_params) > 0 do
+      Enum.each(networks_params, fn {_index, network_params} ->
+        if valid_network_params?(network_params) do
+          network_id = parse_network_id(network_params["network_id"])
+
+          %PersonNetwork{}
+          |> PersonNetwork.changeset(%{
+            person_id: person_id,
+            network_id: network_id,
+            username: network_params["username"] || "",
+            url: network_params["url"] || ""
+          })
+          |> Repo.insert()
+        end
+      end)
+    end
+  end
+
+  # Validar que los params de network sean válidos
+  defp valid_network_params?(params) do
+    is_map(params) &&
+    params["network_id"] &&
+    params["network_id"] != "" &&
+    params["username"] &&
+    params["username"] != ""
+  end
+
+  # Convertir ID a entero si es string
+  defp parse_network_id(id) when is_binary(id) do
+    {int_id, _} = Integer.parse(id)
+    int_id
+  end
+  defp parse_network_id(id), do: id
+
+  @doc """
+  Creates a user with associated person_info.
+  """
+  def create_user_with_person_info(user_params, person_info_params, networks_params) do
+    # Crear usuario
+    user_changeset = %User{} |> User.registration_changeset(user_params)
+
+    case Repo.insert(user_changeset) do
+      {:ok, user} ->
+        # Si hay info personal válida
+        if has_valid_person_info?(person_info_params) do
+          # Crear persona
+          case create_person_info_with_networks(person_info_params, networks_params) do
+            {:ok, %{person_info: person_info}} when not is_nil(person_info) ->
+              # Actualizar usuario con referencia a persona
+              user
+              |> User.changeset(%{"person_id" => person_info.id})
+              |> Repo.update()
+              |> case do
+                {:ok, updated_user} -> {:ok, %{user: updated_user}}
+                {:error, _} -> {:ok, %{user: user}} # Devolver usuario original si falla la actualización
+              end
+
+            _ -> {:ok, %{user: user}} # Devolver usuario original si falla la creación de persona
+          end
+        else
+          {:ok, %{user: user}} # Devolver usuario si no hay info personal
+        end
+
+      {:error, changeset} ->
+        {:error, :user, changeset, %{}}
+    end
+  end
+
+  @doc """
+  Updates a user with associated person_info.
+  """
+  def update_user_with_person_info(%User{} = user, user_params, person_info_params, networks_params) do
+    # Actualizar usuario
+    user_changeset = User.changeset(user, user_params)
+
+    case Repo.update(user_changeset) do
+      {:ok, updated_user} ->
+        # Si hay info personal válida
+        if has_valid_person_info?(person_info_params) do
+          if updated_user.person_id do
+            # Si ya tiene person_id, actualizar
+            case update_person_info_with_networks(
+              get_person_info!(updated_user.person_id),
+              person_info_params,
+              networks_params
+            ) do
+              {:ok, _} -> {:ok, %{user: updated_user}}
+              {:error, op, val, _} -> {:error, op, val, %{}}
+            end
+          else
+            # Si no tiene person_id, crear nueva persona
+            case create_person_info_with_networks(person_info_params, networks_params) do
+              {:ok, %{person_info: person_info}} when not is_nil(person_info) ->
+                # Actualizar usuario con referencia a la nueva persona
+                updated_user
+                |> User.changeset(%{"person_id" => person_info.id})
+                |> Repo.update()
+                |> case do
+                  {:ok, user_with_person} -> {:ok, %{user: user_with_person}}
+                  {:error, changeset} -> {:error, :user_update, changeset, %{}}
+                end
+
+              _ -> {:ok, %{user: updated_user}} # Devolver usuario actualizado si falla crear persona
+            end
+          end
+        else
+          {:ok, %{user: updated_user}} # Devolver usuario actualizado si no hay info personal
+        end
+
+      {:error, changeset} ->
+        {:error, :user, changeset, %{}}
+    end
+  end
+
+  # Verificar si hay información personal válida
+  defp has_valid_person_info?(params) do
+    is_map(params) &&
+    params["full_name"] &&
+    params["full_name"] != ""
+  end
 end
