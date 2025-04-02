@@ -3,7 +3,6 @@ defmodule TalentWeb.PersonInfoLive.FormComponent do
 
   alias Talent.Accounts
   alias Talent.Accounts.PersonInfo
-  alias Talent.Accounts.PersonNetwork
 
   @impl true
   def render(assigns) do

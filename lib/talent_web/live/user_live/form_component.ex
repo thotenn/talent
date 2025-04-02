@@ -2,8 +2,7 @@ defmodule TalentWeb.UserLive.FormComponent do
   use TalentWeb, :live_component
 
   alias Talent.Accounts
-  alias Talent.Competitions
-  alias Talent.Accounts.{PersonInfo, PersonNetwork}
+  alias Talent.Accounts.{PersonInfo}
 
   @impl true
   def render(assigns) do
@@ -156,22 +155,6 @@ defmodule TalentWeb.UserLive.FormComponent do
       |> Map.new()
     else
       %{}
-    end
-  end
-
-  defp ensure_judge_profile(user) do
-    # Verificar si ya existe un juez asociado
-    case Competitions.get_judge_by_user_id(user.id) do
-      nil ->
-        # No existe, crear uno nuevo usando el email como nombre por defecto
-        Competitions.create_judge(%{
-          name: user.email,
-          user_id: user.id
-        })
-
-      _judge ->
-        # Ya existe un juez, no hacer nada
-        {:ok, nil}
     end
   end
 
