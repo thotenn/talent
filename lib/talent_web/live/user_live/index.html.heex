@@ -12,6 +12,20 @@
   rows={@streams.users}
 >
   <:col :let={{_id, user}} label="Email"><%= user.email %></:col>
+  <:col :let={{_id, user}} label="Nombre">
+    <%= if user.person do %>
+      <%= user.person.full_name %>
+    <% else %>
+      <span class="text-gray-400 italic">Sin información personal</span>
+    <% end %>
+  </:col>
+  <:col :let={{_id, user}} label="Teléfono">
+    <%= if user.person && user.person.phone do %>
+      <%= user.person.phone %>
+    <% else %>
+      <span class="text-gray-400">-</span>
+    <% end %>
+  </:col>
   <:col :let={{_id, user}} label="Rol"><%= String.capitalize(user.role) %></:col>
   <:col :let={{_id, user}} label="Estado">
     <%= if user.confirmed_at, do: "Confirmado", else: "Pendiente" %>

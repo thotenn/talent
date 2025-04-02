@@ -1,0 +1,47 @@
+<.header>
+    Redes Sociales
+    <:actions>
+      <.link patch={~p"/admin/networks/new"}>
+        <.button>Nueva Red Social</.button>
+      </.link>
+    </:actions>
+</.header>
+  
+<.table
+id="networks"
+rows={@streams.networks}
+>
+    <:col :let={{_id, network}} label="Nombre"><%= network.name %></:col>
+    <:col :let={{_id, network}} label="URL Base">
+      <a href={network.base_url} target="_blank" class="text-indigo-600 hover:text-indigo-900">
+        <%= network.base_url %>
+      </a>
+    </:col>
+    <:action :let={{_id, network}}>
+      <div class="sr-only">
+        <.link navigate={~p"/admin/networks/#{network}"}>Ver</.link>
+      </div>
+      <.link patch={~p"/admin/networks/#{network}/edit"}> 
+        <.svgicon_update />
+      </.link>
+    </:action>
+    <:action :let={{id, network}}>
+      <.link 
+        phx-click={JS.push("delete", value: %{id: network.id}) |> hide("##{id}")}
+        data-confirm="¿Estás seguro de que deseas eliminar esta red social?"
+      >
+        <.svgicon_delete />
+      </.link>
+    </:action>
+</.table>
+  
+<.modal :if={@live_action in [:new, :edit]} id="network-modal" show on_cancel={JS.patch(~p"/admin/networks")}>
+    <.live_component
+      module={TalentWeb.NetworkLive.FormComponent}
+      id={@network.id || :new}
+      title={@page_title}
+      action={@live_action}
+      network={@network}
+      patch={~p"/admin/networks"}
+    />
+</.modal>
