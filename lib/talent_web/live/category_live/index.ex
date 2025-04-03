@@ -3,10 +3,32 @@ defmodule TalentWeb.CategoryLive.Index do
 
   alias Talent.Competitions
   alias Talent.Competitions.Category
+  alias Talent.Repo
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :categories, Competitions.list_categories())}
+    # Get all categories
+    categories = Competitions.list_categories()
+
+    # Create a lookup map for parent categories
+    parent_categories = Enum.filter(categories, & &1.father)
+    parent_map = Enum.into(parent_categories, %{}, fn c -> {c.id, c} end)
+
+    # Add parent_name to all categories with a father_id
+    categories_with_parent_names =
+      Enum.map(categories, fn category ->
+        if category.father_id do
+          parent_name = get_in(parent_map, [category.father_id, :name]) || "Desconocida"
+          Map.put(category, :parent_name, parent_name)
+        else
+          category
+        end
+      end)
+
+    # Preload parent_category relationship
+    categories_with_relationships = Repo.preload(categories_with_parent_names, :parent_category)
+
+    {:ok, stream(socket, :categories, categories_with_relationships)}
   end
 
   @impl true
@@ -34,14 +56,47 @@ defmodule TalentWeb.CategoryLive.Index do
 
   @impl true
   def handle_info({TalentWeb.CategoryLive.FormComponent, {:saved, category}}, socket) do
-    {:noreply, stream_insert(socket, :categories, category)}
+    # Preload the parent relationship and add parent name if needed
+    category_with_parent =
+      category
+      |> Repo.preload(:parent_category)
+      |> maybe_add_parent_name()
+
+    {:noreply, stream_insert(socket, :categories, category_with_parent)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     category = Competitions.get_category!(id)
-    {:ok, _} = Competitions.delete_category(category)
 
-    {:noreply, stream_delete(socket, :categories, category)}
+    # Check if this is a parent category with children
+    has_children =
+      Competitions.list_categories_by_parent(category.id)
+      |> Enum.any?()
+
+    if has_children do
+      {:noreply,
+        socket
+        |> put_flash(:error, "No se puede eliminar una categoría padre que tiene categorías hijas asociadas.")}
+    else
+      case Competitions.delete_category(category) do
+        {:ok, _} ->
+          {:noreply, stream_delete(socket, :categories, category)}
+
+        {:error, changeset} ->
+          {:noreply,
+            socket
+            |> put_flash(:error, "Error al eliminar la categoría: #{inspect(changeset.errors)}")}
+      end
+    end
+  end
+
+  # Helper function to add parent_name to a category
+  defp maybe_add_parent_name(category) do
+    if category.father_id && category.parent_category do
+      Map.put(category, :parent_name, category.parent_category.name)
+    else
+      category
+    end
   end
 end

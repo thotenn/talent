@@ -1,0 +1,128 @@
+<.header>
+    Resultados Combinados: <%= @parent_category.name %>
+    <:actions>
+      <.link navigate={~p"/notary/results"} class="text-sm">
+        &larr; Volver a las categorías
+      </.link>
+    </:actions>
+  </.header>
+  
+  <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-4">Subcategorías incluidas</h2>
+    
+    <div class="flex flex-wrap gap-2 mb-6">
+      <%= for category <- @child_categories do %>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+          <%= category.name %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="bg-white shadow-md rounded-lg p-6 mb-8" 
+       id="results-table" 
+       phx-hook="HighlightUpdates">
+    <h2 class="text-xl font-semibold mb-4">
+      Clasificación General
+      <span class="inline-flex ml-2 items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+        En tiempo real
+      </span>
+    </h2>
+    
+    <%= if Enum.empty?(@results) do %>
+      <p class="text-gray-600 italic">No hay resultados disponibles para esta categoría padre.</p>
+    <% else %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puntuación Total</th>
+              <%= for judge <- @judges do %>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <%= judge.name %>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <%= for {result, index} <- Enum.with_index(@results) do %>
+              <tr class={if index == 0, do: "bg-yellow-50", else: ""} id={"participant-row-#{result.participant.id}"}>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= index + 1 %>
+                  <%= if index == 0 do %>
+                    <span class="ml-1 text-yellow-500">🏆</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= result.participant.name %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-indigo-600">
+                  <%= result.category.name %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                  <%= format_value(result.total_score) %>
+                </td>
+                <%= for judge <- @judges do %>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= format_value(Map.get(result.judge_scores, judge.id, 0)) %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="bg-white shadow-md rounded-lg p-6 mb-8" 
+       id="criteria-table"
+       phx-hook="HighlightUpdates">
+    <h2 class="text-xl font-semibold mb-4">
+      Desglose por Criterios
+      <span class="inline-flex ml-2 items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+        En tiempo real
+      </span>
+    </h2>
+    
+    <%= if Enum.empty?(@results) do %>
+      <p class="text-gray-600 italic">No hay resultados disponibles para esta categoría padre.</p>
+    <% else %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participante</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+              <%= for criterion <- @criteria do %>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <%= criterion.name %>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <%= for result <- @results do %>
+              <tr id={"criteria-row-#{result.participant.id}"}>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= result.participant.name %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-indigo-600">
+                  <%= result.category.name %>
+                </td>
+                <%= for criterion <- @criteria do %>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <% value = Map.get(result.criteria_scores, criterion.id, 0) %>
+                    <%= format_value(value) %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>

@@ -8,8 +8,8 @@ defmodule TalentWeb.JudgeLive.Show do
   def mount(%{"id" => id}, _session, socket) do
     judge = Competitions.get_judge!(id) |> Repo.preload([:user, :categories])
 
-    # Obtener todas las categorías disponibles
-    categories = Competitions.list_categories()
+    # Obtener todas las categorías disponibles - ahora solo las que NO son categorías padre
+    categories = Competitions.list_assignable_categories()
 
     # Crear un mapa para rastrear qué categorías están asignadas al juez
     assigned_categories = Enum.into(judge.categories, %{}, fn cat -> {cat.id, true} end)

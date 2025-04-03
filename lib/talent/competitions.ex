@@ -543,31 +543,6 @@ defmodule Talent.Competitions do
     end
   end
 
-  defp handle_existing_or_new_person_info(multi, participant, person_info_params, networks_params) do
-    if has_valid_person_info?(person_info_params) do
-      if participant.person_id do
-        # Si ya tiene person_id, actualizar la información personal existente
-        multi
-        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
-          person_info = Accounts.get_person_info!(participant.person_id)
-          Accounts.update_person_info_with_networks(person_info, person_info_params, networks_params)
-        end)
-      else
-        # Si no tiene person_id, crear nueva información personal
-        multi
-        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
-          Accounts.create_person_info_with_networks(person_info_params, networks_params)
-        end)
-      end
-    else
-      # No hay información personal válida
-      multi
-      |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
-        {:ok, nil}
-      end)
-    end
-  end
-
   defp create_participant_with_person(multi, participant_params) do
     multi
     |> Ecto.Multi.run(:participant, fn _repo, changes ->
@@ -633,5 +608,109 @@ defmodule Talent.Competitions do
     is_map(params) &&
     params["full_name"] &&
     params["full_name"] != ""
+  end
+
+  @doc """
+  Returns the list of parent categories.
+  """
+  def list_parent_categories do
+    Category
+    |> where([c], c.father == true)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns the list of child categories for a specific parent category.
+  """
+  def list_categories_by_parent(parent_id) do
+    Category
+    |> where([c], c.father_id == ^parent_id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns the list of categories that can be assigned to judges.
+  These are categories that are not parent categories.
+  """
+  def list_assignable_categories do
+    Category
+    |> where([c], c.father == false)
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists all participants from categories that belong to a specific parent category.
+  """
+  def list_participants_by_parent_category(parent_id) do
+    # Get all child category IDs for this parent
+    child_category_ids =
+      Category
+      |> where([c], c.father_id == ^parent_id)
+      |> select([c], c.id)
+      |> Repo.all()
+
+    # Get all participants from these categories
+    Participant
+    |> where([p], p.category_id in ^child_category_ids)
+    |> Repo.all()
+    |> Repo.preload(:category)
+  end
+
+  @doc """
+  Calculate aggregated results for all categories under a parent category.
+  """
+  def calculate_parent_category_results(parent_id) do
+    # Get all participants for this parent category
+    participants = list_participants_by_parent_category(parent_id)
+
+    # Group participants by their category
+    participants_by_category = Enum.group_by(participants, fn p -> p.category_id end)
+
+    # For each category, calculate results
+    results = Enum.flat_map(participants_by_category, fn {category_id, category_participants} ->
+      category = get_category!(category_id)
+
+      # Get judges and criteria for this category
+      judges = list_judges_by_category(category_id)
+      criteria = Talent.Scoring.list_root_scoring_criteria_by_category(category_id)
+
+      # Calculate results for each participant in this category
+      Enum.map(category_participants, fn participant ->
+        total_score = Talent.Scoring.calculate_total_score(participant.id)
+
+        # Calculate scores by judge
+        judge_scores = Enum.map(judges, fn judge ->
+          scores = Talent.Scoring.get_judge_scores_for_participant(judge.id, participant.id)
+
+          judge_total = Enum.reduce(scores, 0, fn score, acc ->
+            if score.criterion && score.criterion.is_discount do
+              acc - score.value
+            else
+              acc + score.value
+            end
+          end)
+
+          {judge.id, judge_total}
+        end) |> Map.new()
+
+        # Calculate scores by criterion
+        criteria_scores = Enum.map(criteria, fn criterion ->
+          avg_score = Talent.Scoring.calculate_average_score_by_criterion(participant.id, criterion.id)
+          {criterion.id, avg_score}
+        end) |> Map.new()
+
+        # Return result with the participant's category
+        %{
+          participant: participant,
+          category: category,
+          total_score: total_score,
+          judge_scores: judge_scores,
+          criteria_scores: criteria_scores
+        }
+      end)
+    end)
+
+    # Sort all results by total score
+    Enum.sort_by(results, fn result -> result.total_score end, :desc)
   end
 end

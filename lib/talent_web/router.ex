@@ -109,6 +109,8 @@ defmodule TalentWeb.Router do
       scope "/notary", as: :notary do
         live "/results", ResultsLive.Index, :index
         live "/results/:category_id", ResultsLive.Show, :show
+
+        live "/results/parent/:parent_id", ParentResultsLive.Show, :show
       end
     end
   end

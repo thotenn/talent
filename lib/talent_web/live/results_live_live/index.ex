@@ -20,7 +20,8 @@ defmodule TalentWeb.ResultsLive.Index do
           if judge.scores_access do
             # Obtener las categorías asignadas a este juez
             judge = Repo.preload(judge, :categories)
-            judge.categories
+            # Precargar la relación parent_category para cada categoría
+            Repo.preload(judge.categories, :parent_category)
           else
             # Redirigir y mostrar mensaje de error, pero continuar con lista vacía
             send(self(), {:flash_and_redirect, socket, :error,
@@ -33,11 +34,17 @@ defmodule TalentWeb.ResultsLive.Index do
         end
       _ ->
         # Para otros roles (escribana, administrador), mostrar todas las categorías
-        Competitions.list_categories()
+        # Incluimos tanto categorías estándar como categorías padre
+        # Precargar la relación parent_category para todas las categorías
+        Competitions.list_categories() |> Repo.preload(:parent_category)
     end
 
+    # Separar categorías en padres y estándar/hijas
+    {parent_categories, regular_categories} = Enum.split_with(categories, & &1.father)
+
     {:ok, socket
-      |> assign(:categories, categories)
+      |> assign(:parent_categories, parent_categories)
+      |> assign(:regular_categories, regular_categories)
       |> assign(:page_title, "Resultados de la Competencia")
     }
   end
