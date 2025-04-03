@@ -8,7 +8,6 @@ defmodule Talent.Competitions do
 
   alias Talent.Competitions.Category
   alias Talent.Accounts
-  alias Talent.Accounts.PersonInfo
 
   @doc """
   Returns the list of categories.

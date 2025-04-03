@@ -2,7 +2,6 @@ defmodule TalentWeb.ParentResultsLive.Show do
   use TalentWeb, :live_view
 
   alias Talent.Competitions
-  alias Talent.Repo
   alias Decimal
 
   @impl true

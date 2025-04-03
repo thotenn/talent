@@ -2,7 +2,6 @@ defmodule TalentWeb.ParticipantLive.FormComponent do
   use TalentWeb, :live_component
 
   alias Talent.Competitions
-  alias Talent.Accounts.PersonInfo
   alias Talent.Repo
 
   @impl true
