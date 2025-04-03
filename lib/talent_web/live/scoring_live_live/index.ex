@@ -22,7 +22,12 @@ defmodule TalentWeb.ScoringLive.Index do
       # Obtener las categorías asignadas al juez - Precargar la relación
       judge_with_categories = Repo.preload(judge, :categories)
 
-      if Enum.empty?(judge_with_categories.categories) do
+      # Filtrar para asegurarse de que NO hay categorías padre
+      categories =
+        judge_with_categories.categories
+        |> Enum.filter(fn category -> category.father == false end)
+
+      if Enum.empty?(categories) do
         {:ok, socket
           |> put_flash(:info, "No tienes categorías asignadas. Contacta al administrador.")
           |> assign(:judge, judge)
@@ -33,7 +38,7 @@ defmodule TalentWeb.ScoringLive.Index do
       else
         {:ok, socket
           |> assign(:judge, judge)
-          |> assign(:categories, judge_with_categories.categories)
+          |> assign(:categories, categories)
           |> assign(:selected_category, nil)
           |> assign(:participants, [])
         }

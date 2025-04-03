@@ -7,11 +7,17 @@ defmodule TalentWeb.JudgeLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     # Cargar jueces con sus categorías relacionadas
-    judges_with_categories = Competitions.list_judges()
-      |> Repo.preload([:user, :categories])
+    judges = Competitions.list_judges()
+      |> Repo.preload([:user])
+
+    # Precargar las categorías, pero asegurarnos de que no incluyan categorías padre
+    judges_with_filtered_categories = Enum.map(judges, fn judge ->
+      categories = Competitions.list_categories_by_judge(judge.id)
+      %{judge | categories: categories}
+    end)
 
     # Inicializar el stream con los jueces precargados
-    {:ok, stream(socket, :judges, judges_with_categories)}
+    {:ok, stream(socket, :judges, judges_with_filtered_categories)}
   end
 
   @impl true

@@ -404,24 +404,35 @@ defmodule Talent.Competitions do
     Participant.changeset(participant, attrs)
   end
 
-    @doc """
+  @doc """
   Gets a list of judges assigned to a specific category.
+  Includes checks to ensure the category is not a parent category.
   """
   def list_judges_by_category(category_id) do
-    CategoryJudge
-    |> where([cj], cj.category_id == ^category_id)
-    |> join(:inner, [cj], j in Judge, on: j.id == cj.judge_id)
-    |> select([_cj, j], j)
-    |> Repo.all()
+    # Verificar que la categoría no sea padre
+    category = get_category!(category_id)
+
+    if category.father do
+      # Si es una categoría padre, devolver lista vacía
+      []
+    else
+      CategoryJudge
+      |> where([cj], cj.category_id == ^category_id)
+      |> join(:inner, [cj], j in Judge, on: j.id == cj.judge_id)
+      |> select([_cj, j], j)
+      |> Repo.all()
+    end
   end
 
   @doc """
   Gets a list of categories assigned to a specific judge.
+  Filters out parent categories.
   """
   def list_categories_by_judge(judge_id) do
     CategoryJudge
     |> where([cj], cj.judge_id == ^judge_id)
     |> join(:inner, [cj], c in Category, on: c.id == cj.category_id)
+    |> where([_cj, c], c.father == false)
     |> select([_cj, c], c)
     |> Repo.all()
   end
@@ -430,16 +441,23 @@ defmodule Talent.Competitions do
   Assign a judge to a category.
   """
   def assign_judge_to_category(judge_id, category_id) do
-    # Verificar si ya existe la asignación
-    case CategoryJudge
-        |> where([cj], cj.judge_id == ^judge_id and cj.category_id == ^category_id)
-        |> Repo.one() do
-      nil ->
-        %CategoryJudge{}
-        |> CategoryJudge.changeset(%{judge_id: judge_id, category_id: category_id})
-        |> Repo.insert()
-      existing ->
-        {:ok, existing}
+    # Verificar que la categoría no sea padre
+    category = get_category!(category_id)
+
+    if category.father do
+      {:error, "No se puede asignar un juez a una categoría padre"}
+    else
+      # Verificar si ya existe la asignación
+      case CategoryJudge
+          |> where([cj], cj.judge_id == ^judge_id and cj.category_id == ^category_id)
+          |> Repo.one() do
+        nil ->
+          %CategoryJudge{}
+          |> CategoryJudge.changeset(%{judge_id: judge_id, category_id: category_id})
+          |> Repo.insert()
+        existing ->
+          {:ok, existing}
+      end
     end
   end
 

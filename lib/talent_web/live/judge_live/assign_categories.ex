@@ -10,7 +10,7 @@ defmodule TalentWeb.JudgeLive.AssignCategories do
     judge = Competitions.get_judge!(id) |> Repo.preload([:user, :categories])
 
     # Obtener todas las categorías disponibles
-    categories = Competitions.list_categories()
+    categories = Competitions.list_assignable_categories()
 
     # Crear un mapa para rastrear qué categorías están asignadas al juez
     assigned_categories = Enum.into(judge.categories, %{}, fn cat -> {cat.id, true} end)
