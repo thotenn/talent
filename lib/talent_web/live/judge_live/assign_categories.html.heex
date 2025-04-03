@@ -35,7 +35,13 @@
     ]}>
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-medium text-lg"><%= category.name %></h3>
+          <h3 class="font-medium text-lg">
+            <%= if category.father_id && !is_nil(category.parent_category) && !is_struct(category.parent_category, Ecto.Association.NotLoaded) do %>
+              <%= category.parent_category.name %> - <%= category.name %>
+            <% else %>
+              <%= category.name %>
+            <% end %>
+          </h3>
           <p class="text-sm text-gray-600 mt-1"><%= category.description %></p>
           <p class="text-xs text-gray-500 mt-2">Puntaje máximo: <%= category.max_points %></p>
         </div>

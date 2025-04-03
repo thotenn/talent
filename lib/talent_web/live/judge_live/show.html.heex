@@ -32,7 +32,13 @@
     <%= for category <- @categories do %>
       <div class="border rounded-lg p-4 flex items-center justify-between">
         <div>
-          <h3 class="font-medium"><%= category.name %></h3>
+          <h3 class="font-medium">
+            <%= if category.father_id && !is_nil(category.parent_category) && !is_struct(category.parent_category, Ecto.Association.NotLoaded) do %>
+              <%= category.parent_category.name %> - <%= category.name %>
+            <% else %>
+              <%= category.name %>
+            <% end %>
+          </h3>
           <p class="text-sm text-gray-600"><%= category.description %></p>
         </div>
         <div>

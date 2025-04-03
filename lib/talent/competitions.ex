@@ -435,6 +435,7 @@ defmodule Talent.Competitions do
     |> where([_cj, c], c.father == false)
     |> select([_cj, c], c)
     |> Repo.all()
+    |> Repo.preload(:parent_category)
   end
 
   @doc """

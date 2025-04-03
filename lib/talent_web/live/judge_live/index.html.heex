@@ -29,7 +29,11 @@
     <div class="flex flex-wrap gap-1">
       <%= for category <- judge.categories do %>
         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          <%= category.name %>
+          <%= if category.father_id && !is_nil(category.parent_category) && !is_struct(category.parent_category, Ecto.Association.NotLoaded) do %>
+            <%= category.parent_category.name %> - <%= category.name %>
+          <% else %>
+            <%= category.name %>
+          <% end %>
         </span>
       <% end %>
       

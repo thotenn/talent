@@ -1,0 +1,19 @@
+# Crea un archivo .env en el directorio del proyecto
+cat > .env << 'EOL'
+# Variables de entorno para la app Phoenix
+export PHX_HOST=talent.thotenn.com
+export PORT=4000
+export MIX_ENV=prod
+export DATABASE_URL=ecto://postgres:holaquetal@localhost/talent_prod
+export SECRET_KEY_BASE=$(mix phx.gen.secret)
+export POOL_SIZE=10
+EOL
+
+# Carga las variables
+source .env
+
+
+# Crea la base de datos en PostgreSQL
+sudo -u postgres psql -c "CREATE DATABASE talent_prod;"
+sudo -u postgres psql -c "CREATE USER talent WITH PASSWORD 'holaquetal';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE talent_prod TO talent;"

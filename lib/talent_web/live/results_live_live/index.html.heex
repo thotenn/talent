@@ -31,7 +31,13 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
     <%= for category <- @regular_categories do %>
       <.link navigate={~p"/notary/results/#{category.id}"} class="bg-white border hover:border-indigo-500 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-        <div class="font-medium mb-2"><%= category.name %></div>
+        <div class="font-medium mb-2">
+          <%= if category.father_id && !is_nil(category.parent_category) && !is_struct(category.parent_category, Ecto.Association.NotLoaded) do %>
+            <%= category.parent_category.name %> - <%= category.name %>
+          <% else %>
+            <%= category.name %>
+          <% end %>
+        </div>
         <div class="text-sm text-gray-500">Puntos máximos: <%= category.max_points %></div>
         <%= if category.father_id do %>
           <div class="text-xs text-blue-600 mt-1">
