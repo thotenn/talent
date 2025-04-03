@@ -3,6 +3,7 @@ defmodule TalentWeb.ParticipantLive.Index do
 
   alias Talent.Competitions
   alias Talent.Competitions.Participant
+  alias Talent.Repo
 
   @impl true
   def mount(_params, _session, socket) do
@@ -12,7 +13,7 @@ defmodule TalentWeb.ParticipantLive.Index do
     categories_map = Competitions.list_categories() |> Enum.into(%{}, fn c -> {c.id, c} end)
 
     # Obtener participantes, sin precargar
-    participants = Competitions.list_participants()
+    participants = Competitions.list_participants() |> Repo.preload(:person)
 
     # Añadir información de categoría manualmente a cada participante
     participants_with_categories = Enum.map(participants, fn p ->
@@ -56,12 +57,14 @@ defmodule TalentWeb.ParticipantLive.Index do
     # Obtener todas las categorías para buscar el nombre
     categories_map = Competitions.list_categories() |> Enum.into(%{}, fn c -> {c.id, c} end)
 
+    participant_with_person = Repo.preload(participant, :person)
+
     # Agregar el campo category_name al participante guardado
     participant_with_category =
       if participant.category_id do
-        Map.put(participant, :category_name, categories_map[participant.category_id].name)
+        Map.put(participant_with_person, :category_name, categories_map[participant.category_id].name)
       else
-        Map.put(participant, :category_name, "Sin categoría")
+        Map.put(participant_with_person, :category_name, "Sin categoría")
       end
 
     {:noreply, stream_insert(socket, :participants, participant_with_category)}

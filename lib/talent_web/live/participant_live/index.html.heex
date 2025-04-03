@@ -12,6 +12,20 @@
   rows={@streams.participants}
 >
   <:col :let={{_id, participant}} label="Nombre"><%= participant.name %></:col>
+  <:col :let={{_id, participant}} label="Nombre Completo">
+    <%= if participant.person do %>
+      <%= participant.person.full_name %>
+    <% else %>
+      <span class="text-gray-400 italic">Sin información personal</span>
+    <% end %>
+  </:col>
+  <:col :let={{_id, participant}} label="Teléfono">
+    <%= if participant.person && participant.person.phone do %>
+      <%= participant.person.phone %>
+    <% else %>
+      <span class="text-gray-400">-</span>
+    <% end %>
+  </:col>
   <:col :let={{_id, participant}} label="Categoría">
     <%= participant.category_name %>
   </:col>

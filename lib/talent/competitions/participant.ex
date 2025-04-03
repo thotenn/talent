@@ -6,14 +6,17 @@ defmodule Talent.Competitions.Participant do
     field :name, :string
     belongs_to :category, Talent.Competitions.Category
 
+    belongs_to :person, Talent.Accounts.PersonInfo
+
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(participant, attrs) do
     participant
-    |> cast(attrs, [:name, :category_id])
+    |> cast(attrs, [:name, :category_id, :person_id])
     |> validate_required([:name])
     |> foreign_key_constraint(:category_id)
+    |> foreign_key_constraint(:person_id)
   end
 end

@@ -109,12 +109,6 @@ defmodule TalentWeb.UserLive.FormComponent do
          socket
          |> put_flash(:error, "Error al guardar: #{inspect(failed_operation)}")
          |> assign_form(failed_value)}
-
-      error ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Error inesperado: #{inspect(error)}")
-         |> assign_form(Accounts.change_user(user, user_params))}
     end
   end
 
@@ -138,12 +132,6 @@ defmodule TalentWeb.UserLive.FormComponent do
          socket
          |> put_flash(:error, "Error al guardar: #{inspect(failed_operation)}")
          |> assign_form(failed_value)}
-
-      error ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Error inesperado: #{inspect(error)}")
-         |> assign_form(Accounts.change_user_registration(%Talent.Accounts.User{}, user_params))}
     end
   end
 

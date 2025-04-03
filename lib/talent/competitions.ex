@@ -7,6 +7,8 @@ defmodule Talent.Competitions do
   alias Talent.Repo
 
   alias Talent.Competitions.Category
+  alias Talent.Accounts
+  alias Talent.Accounts.PersonInfo
 
   @doc """
   Returns the list of categories.
@@ -474,5 +476,162 @@ defmodule Talent.Competitions do
     CategoryJudge
     |> where([cj], cj.judge_id == ^judge_id and cj.category_id == ^category_id)
     |> Repo.exists?()
+  end
+
+  @doc """
+  Creates a participant with associated person_info.
+  """
+  def create_participant_with_person_info(participant_params, person_info_params, networks_params) do
+    Ecto.Multi.new()
+    |> handle_person_info_for_create(person_info_params, networks_params)
+    |> create_participant_with_person(participant_params)
+    |> Talent.Repo.transaction()
+  end
+
+  @doc """
+  Updates a participant with associated person_info.
+  """
+  def update_participant_with_person_info(%Participant{} = participant, participant_params, person_info_params, networks_params) do
+    # Iniciar la transacción
+    Ecto.Multi.new()
+    |> handle_person_info_for_update(participant, person_info_params, networks_params)
+    |> update_participant_with_person_id(participant, participant_params)
+    |> Talent.Repo.transaction()
+  end
+
+  # Funciones privadas para manejar las transacciones
+
+  defp handle_person_info_for_create(multi, person_info_params, networks_params) do
+    # Si hay información personal válida, crearla
+    if has_valid_person_info?(person_info_params) do
+      multi
+      |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+        Accounts.create_person_info_with_networks(person_info_params, networks_params)
+      end)
+    else
+      # No hay información personal, continuar sin ella
+      multi
+      |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+        {:ok, %{person_info: nil}}
+      end)
+    end
+  end
+
+  defp handle_person_info_for_update(multi, participant, person_info_params, networks_params) do
+    # Verificar si hay datos válidos de persona
+    if has_valid_person_info?(person_info_params) do
+      if participant.person_id do
+        # Si ya tiene person_id, actualizar información existente
+        multi
+        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+          person_info = Talent.Accounts.get_person_info!(participant.person_id)
+          Talent.Accounts.update_person_info_with_networks(person_info, person_info_params, networks_params)
+        end)
+      else
+        # Si no tiene person_id, crear nueva información personal
+        multi
+        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+          Talent.Accounts.create_person_info_with_networks(person_info_params, networks_params)
+        end)
+      end
+    else
+      # No hay información personal válida
+      multi
+      |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+        {:ok, %{person_info: nil}}
+      end)
+    end
+  end
+
+  defp handle_existing_or_new_person_info(multi, participant, person_info_params, networks_params) do
+    if has_valid_person_info?(person_info_params) do
+      if participant.person_id do
+        # Si ya tiene person_id, actualizar la información personal existente
+        multi
+        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+          person_info = Accounts.get_person_info!(participant.person_id)
+          Accounts.update_person_info_with_networks(person_info, person_info_params, networks_params)
+        end)
+      else
+        # Si no tiene person_id, crear nueva información personal
+        multi
+        |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+          Accounts.create_person_info_with_networks(person_info_params, networks_params)
+        end)
+      end
+    else
+      # No hay información personal válida
+      multi
+      |> Ecto.Multi.run(:person_info, fn _repo, _changes ->
+        {:ok, nil}
+      end)
+    end
+  end
+
+  defp create_participant_with_person(multi, participant_params) do
+    multi
+    |> Ecto.Multi.run(:participant, fn _repo, changes ->
+      # Log para depuración
+      IO.inspect(changes, label: "Cambios en la transacción para crear participante")
+
+      # Si se creó información personal, asignarla al participante
+      participant_params =
+        case changes do
+          %{person_info: person_info = %Talent.Accounts.PersonInfo{}} ->
+            # Si recibimos directamente un objeto PersonInfo
+            IO.puts("Encontrada información personal directa: #{inspect(person_info.id)}")
+            Map.put(participant_params, "person_id", person_info.id)
+          %{person_info: %{person_info: person_info}} when not is_nil(person_info) ->
+            # Si recibimos la estructura anidada
+            IO.puts("Encontrada información personal anidada: #{inspect(person_info.id)}")
+            Map.put(participant_params, "person_id", person_info.id)
+          _ ->
+            IO.puts("No se encontró información personal válida para el nuevo participante")
+            participant_params
+        end
+
+      # Log para verificar los parámetros finales
+      IO.inspect(participant_params, label: "Parámetros finales para crear participante")
+
+      # Crear el participante con los parámetros finales
+      create_participant(participant_params)
+    end)
+  end
+
+  defp update_participant_with_person_id(multi, participant, participant_params) do
+    multi
+    |> Ecto.Multi.run(:participant, fn _repo, changes ->
+      # Log para depuración
+      IO.inspect(changes, label: "Cambios en la transacción")
+
+      # Verificar si tenemos una persona válida en los cambios
+      participant_params =
+        case changes do
+          %{person_info: %{person_info: person_info}} when not is_nil(person_info) ->
+            IO.puts("Encontrada información personal: #{inspect(person_info.id)}")
+            Map.put(participant_params, "person_id", person_info.id)
+          %{person_info: person_info} when is_map(person_info) and not is_nil(person_info.id) ->
+            IO.puts("Encontrada información personal alternativa: #{inspect(person_info.id)}")
+            Map.put(participant_params, "person_id", person_info.id)
+          _ ->
+            IO.puts("No se encontró información personal válida")
+            participant_params
+        end
+
+      # Log para verificar los parámetros finales
+      IO.inspect(participant_params, label: "Parámetros de participante finales")
+
+      # Actualizar el participante con los parámetros finales
+      result = update_participant(participant, participant_params)
+      IO.inspect(result, label: "Resultado de actualización")
+      result
+    end)
+  end
+
+  # Verificar si hay información personal válida
+  defp has_valid_person_info?(params) do
+    is_map(params) &&
+    params["full_name"] &&
+    params["full_name"] != ""
   end
 end

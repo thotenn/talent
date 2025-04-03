@@ -577,8 +577,8 @@ defmodule Talent.Accounts do
         {:ok, person_info} ->
           # Crear redes sociales si existen
           create_networks_for_person(person_info.id, networks_params)
+          # Devolver la persona creada con la estructura esperada
           {:ok, %{person_info: person_info}}
-
         {:error, changeset} ->
           {:error, :person_info, changeset, %{}}
       end
@@ -588,25 +588,47 @@ defmodule Talent.Accounts do
   @doc """
   Updates a person_info with associated networks.
   """
+  # lib/talent/accounts.ex
   def update_person_info_with_networks(%PersonInfo{} = person_info, person_info_params, networks_params) do
-    # Si no hay un nombre completo, no actualizar
-    if is_nil(person_info_params) || is_nil(person_info_params["full_name"]) || person_info_params["full_name"] == "" do
-      {:ok, %{person_info: person_info}}
-    else
-      # Actualizar persona
+    # Verificar que tenemos datos válidos
+    if has_valid_person_info?(person_info_params) do
+      # Actualizar la información personal
       person_info_changeset = PersonInfo.changeset(person_info, person_info_params)
+
       case Repo.update(person_info_changeset) do
         {:ok, updated_person_info} ->
-          # Eliminar redes existentes
-          Repo.delete_all(from pn in PersonNetwork, where: pn.person_id == ^updated_person_info.id)
+          # Si hay redes sociales, eliminar las existentes
+          if is_map(networks_params) && map_size(networks_params) > 0 do
+            # Eliminar las redes existentes
+            Repo.delete_all(from pn in PersonNetwork, where: pn.person_id == ^updated_person_info.id)
 
-          # Crear nuevas redes
-          create_networks_for_person(updated_person_info.id, networks_params)
+            # Crear las nuevas redes sociales
+            Enum.each(networks_params, fn {_index, network_params} ->
+              if valid_network_params?(network_params) do
+                network_id = parse_network_id(network_params["network_id"])
+
+                %PersonNetwork{}
+                |> PersonNetwork.changeset(%{
+                  person_id: updated_person_info.id,
+                  network_id: network_id,
+                  username: network_params["username"] || "",
+                  url: network_params["url"] || ""
+                })
+                |> Repo.insert()
+              end
+            end)
+          end
+
+          # Recargar con las redes sociales actualizadas
+          updated_person_info = Repo.preload(updated_person_info, :person_networks)
           {:ok, %{person_info: updated_person_info}}
 
         {:error, changeset} ->
           {:error, :person_info, changeset, %{}}
       end
+    else
+      # Si no hay datos válidos, devolver la persona sin cambios
+      {:ok, %{person_info: person_info}}
     end
   end
 
