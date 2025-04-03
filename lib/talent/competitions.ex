@@ -20,7 +20,9 @@ defmodule Talent.Competitions do
 
   """
   def list_categories do
-    Repo.all(Category)
+    Category
+    |> Repo.all()
+    |> Repo.preload(:parent_category)
   end
 
   @doc """
@@ -626,6 +628,7 @@ defmodule Talent.Competitions do
     Category
     |> where([c], c.father_id == ^parent_id)
     |> Repo.all()
+    |> Repo.preload(:parent_category)
   end
 
   @doc """
@@ -636,6 +639,7 @@ defmodule Talent.Competitions do
     Category
     |> where([c], c.father == false)
     |> Repo.all()
+    |> Repo.preload(:parent_category)
   end
 
   @doc """

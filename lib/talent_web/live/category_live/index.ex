@@ -7,7 +7,7 @@ defmodule TalentWeb.CategoryLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    # Get all categories
+    # Get all categories with parent_category preloaded
     categories = Competitions.list_categories()
 
     # Create a lookup map for parent categories
@@ -18,17 +18,22 @@ defmodule TalentWeb.CategoryLive.Index do
     categories_with_parent_names =
       Enum.map(categories, fn category ->
         if category.father_id do
-          parent_name = get_in(parent_map, [category.father_id, :name]) || "Desconocida"
+          parent_name = case category.parent_category do
+            %Ecto.Association.NotLoaded{} ->
+              # Fallback if preload somehow failed
+              get_in(parent_map, [category.father_id, :name]) || "Desconocida"
+            nil ->
+              "Desconocida"
+            parent ->
+              parent.name
+          end
           Map.put(category, :parent_name, parent_name)
         else
           category
         end
       end)
 
-    # Preload parent_category relationship
-    categories_with_relationships = Repo.preload(categories_with_parent_names, :parent_category)
-
-    {:ok, stream(socket, :categories, categories_with_relationships)}
+    {:ok, stream(socket, :categories, categories_with_parent_names)}
   end
 
   @impl true
