@@ -20,12 +20,13 @@ defmodule TalentWeb.ScoringLive.Index do
 
     if judge do
       # Obtener las categorías asignadas al juez - Precargar la relación
-      judge_with_categories = Repo.preload(judge, :categories)
+      judge_with_categories = Repo.preload(judge, [categories: :parent_category])
 
       # Filtrar para asegurarse de que NO hay categorías padre
       categories =
         judge_with_categories.categories
         |> Enum.filter(fn category -> category.father == false end)
+        |> Repo.preload(:parent_category)
 
       if Enum.empty?(categories) do
         {:ok, socket

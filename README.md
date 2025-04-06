@@ -17,44 +17,21 @@ mix run priv/repo/seeds.exs
 
 mix phx.server
 
+### Hacer deploy en produccion, cada git pull 
 
-### LIMPIAR CACHE EN PRODUCCION
-# Limpiar todo
-mix deps.clean --all && mix clean && mix phx.digest.clean && rm -rf _build
-
-# Reconstruir
+mix deps.clean --all
+mix clean
+mix phx.digest.clean
+rm -rf _build
 mix deps.get
 mix compile
-cd assets && npm install && cd ..  # Si usas npm para gestionar activos
-mix assets.deploy  # O el comando equivalente en tu aplicación
-
-
-### LIMPIAR CACHE EN LOCAL
-mix clean
-mix assets.setup
-mix assets.build
-
-
-### Luego de actualizar el repositorio en produccion
-
-sudo systemctl stop talent
-source .env
-mix deps.get && MIX_ENV=prod mix compile && MIX_ENV=prod mix ecto.migrate && MIX_ENV=prod mix assets.deploy && MIX_ENV=prod mix phx.digest
+MIX_ENV=prod mix assets.deploy
+MIX_ENV=prod mix phx.digest
+sudo systemctl restart talent
 mix phx.gen.release
 mix release
 sudo systemctl daemon-reload
-sudo systemctl start talent
-
-# Manera mas rapida
-mix phx.gen.release && mix release && sudo systemctl daemon-reload && sudo systemctl restart talent
-
-
-# Si no se actualiza correctamente hacer esto, y luego lo de arriba
-mix clean
-# o más agresivo:
-rm -rf _build
-
-
+sudo systemctl restart talent
 
 
 

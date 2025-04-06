@@ -28,7 +28,11 @@
           <option value="">-- Selecciona una categoría --</option>
           <%= for category <- @categories do %>
             <option value={category.id} selected={@selected_category && @selected_category.id == category.id}>
-              <%= category.name %>
+              <%= if category.father_id && !is_nil(category.parent_category) && !is_struct(category.parent_category, Ecto.Association.NotLoaded) do %>
+                <%= category.parent_category.name %> - <%= category.name %>
+              <% else %>
+                <%= category.name %>
+              <% end %>
             </option>
           <% end %>
         </select>
