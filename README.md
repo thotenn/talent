@@ -32,16 +32,8 @@ mix phx.digest.clean
 rm -rf _build
 mix deps.get
 mix compile
-MIX_ENV=prod mix assets.deploy
 MIX_ENV=prod mix phx.digest
 sudo systemctl restart talent
-mix phx.gen.release
-mix release
-sudo systemctl daemon-reload
-sudo systemctl restart talent
-
-
-
 
 # Resumen Ejecutivo: Asignación de Criterios de Evaluación a Jueces
 
