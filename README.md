@@ -18,7 +18,14 @@ mix run priv/repo/seeds.exs
 mix phx.server
 
 ### Hacer deploy en produccion, cada git pull 
+sudo systemctl stop talent
+MIX_ENV=prod mix clean && MIX_ENV=prod mix deps.get && MIX_ENV=prod mix compile && MIX_ENV=prod mix assets.deploy && MIX_ENV=prod mix release
+chmod +x /home/apps/talent/_build/prod/rel/talent/bin/talent
+sudo systemctl daemon-reload
+sudo systemctl start talent
 
+
+### Otros comandos utiles (PRECAUCION)
 mix deps.clean --all
 mix clean
 mix phx.digest.clean

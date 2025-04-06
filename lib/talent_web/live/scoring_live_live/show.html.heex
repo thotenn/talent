@@ -24,120 +24,137 @@
 </div>
 
 <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-  <form phx-submit="save-scores">
-    <div class="space-y-6">
-      <%= for criterion <- @criteria do %>
-        <div class="criterion-container border-b pb-6 mb-4">
-          <h3 class="text-lg font-medium mb-2"><%= criterion.name %></h3>
-          <p class="text-sm text-gray-600 mb-3">
-            <%= if criterion.description, do: criterion.description, else: "Sin descripción" %> 
-            (<%= criterion.max_points %> puntos máximo)
-          </p>
-          
-          <%= if Enum.empty?(criterion.sub_criteria) do %>
-            <div class="mb-3">
-              <div class="flex flex-col space-y-3">
-                <div class="flex items-center gap-4">
-                  <div class="flex-grow">
-                    <input 
-                      type="range" 
-                      id={"range-#{criterion.id}"} 
-                      min="0" 
-                      max={criterion.max_points} 
-                      step="1"
-                      value={@scores_form[criterion.id][:value]}
-                      class="w-full cursor-pointer"
-                      phx-hook="SyncInputs"
-                      data-target={"number-#{criterion.id}"}
-                      data-display={"display-#{criterion.id}"}
-                    />
-                  </div>
-                  <div class="flex-shrink-0 score-value">
-                    <span id={"display-#{criterion.id}"}><%= @scores_form[criterion.id][:value] %></span>
-                  </div>
-                  <div class="flex-shrink-0 w-20 number-input-container">
-                    <input 
-                      type="number" 
-                      id={"number-#{criterion.id}"}
-                      name={"scores[#{criterion.id}]"}
-                      value={@scores_form[criterion.id][:value]}
-                      min="0" 
-                      max={criterion.max_points}
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      phx-hook="SyncInputs"
-                      data-target={"range-#{criterion.id}"}
-                      data-display={"display-#{criterion.id}"}
-                    />
-                  </div>
-                </div>
-                <div class="flex justify-between px-1 text-xs text-gray-500 mt-1">
-                  <span>0</span>
-                  <span><%= criterion.max_points %></span>
-                </div>
-              </div>
-            </div>
-          <% else %>
-            <div class="pl-4 space-y-5">
-              <%= for sub_criterion <- criterion.sub_criteria do %>
-              <div class="criterion-container mb-2">
-                  <label for={"number-#{sub_criterion.id}"} class="block text-sm font-medium text-gray-700 mb-1">
-                    <%= sub_criterion.name %>
-                  </label>
-                  <p class="text-xs text-gray-500 mb-2">
-                    <%= if sub_criterion.description, do: sub_criterion.description, else: "Sin descripción" %> 
-                    (<%= sub_criterion.max_points %> puntos máximo)
-                  </p>
-                  <div class="flex flex-col space-y-2">
-                    <div class="flex items-center gap-4">
-                      <div class="flex-grow">
-                        <input 
-                          type="range" 
-                          id={"range-#{sub_criterion.id}"} 
-                          min="0" 
-                          max={sub_criterion.max_points} 
-                          step="1"
-                          value={@scores_form[criterion.id][:sub_criteria][sub_criterion.id]}
-                          class="w-full cursor-pointer"
-                          phx-hook="SyncInputs"
-                          data-target={"number-#{sub_criterion.id}"}
-                          data-display={"display-#{sub_criterion.id}"}
-                        />
-                      </div>
-                      <div class="flex-shrink-0 score-value">
-                        <span id={"display-#{sub_criterion.id}"}><%= @scores_form[criterion.id][:sub_criteria][sub_criterion.id] %></span>
-                      </div>
-                      <div class="flex-shrink-0 w-20 number-input-container">
-                        <input 
-                          type="number" 
-                          id={"number-#{sub_criterion.id}"}
-                          name={"scores[#{sub_criterion.id}]"}
-                          value={@scores_form[criterion.id][:sub_criteria][sub_criterion.id]}
-                          min="0" 
-                          max={sub_criterion.max_points}
-                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                          phx-hook="SyncInputs"
-                          data-target={"range-#{sub_criterion.id}"}
-                          data-display={"display-#{sub_criterion.id}"}
-                        />
-                      </div>
-                    </div>
-                    <div class="flex justify-between px-1 text-xs text-gray-500 mt-1">
-                      <span>0</span>
-                      <span><%= sub_criterion.max_points %></span>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-      
+  <%= if Enum.empty?(@criteria) do %>
+    <div class="text-center py-8">
+      <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No hay criterios asignados</h3>
+      <p class="mt-1 text-sm text-gray-500">
+        No tienes criterios de evaluación asignados para calificar a este participante en esta categoría.
+      </p>
       <div class="mt-6">
-        <.button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition-colors">
-          Guardar Calificaciones
-        </.button>
+        <.link navigate={~p"/jury/scoring?category_id=#{@category.id}"} class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+          Volver al listado de participantes
+        </.link>
       </div>
     </div>
-  </form>
+  <% else %>
+    <form phx-submit="save-scores">
+      <div class="space-y-6">
+        <%= for criterion <- @criteria do %>
+          <div class="criterion-container border-b pb-6 mb-4">
+            <h3 class="text-lg font-medium mb-2"><%= criterion.name %></h3>
+            <p class="text-sm text-gray-600 mb-3">
+              <%= if criterion.description, do: criterion.description, else: "Sin descripción" %> 
+              (<%= criterion.max_points %> puntos máximo)
+            </p>
+            
+            <%= if Enum.empty?(criterion.sub_criteria) do %>
+              <div class="mb-3">
+                <div class="flex flex-col space-y-3">
+                  <div class="flex items-center gap-4">
+                    <div class="flex-grow">
+                      <input 
+                        type="range" 
+                        id={"range-#{criterion.id}"} 
+                        min="0" 
+                        max={criterion.max_points} 
+                        step="1"
+                        value={@scores_form[criterion.id][:value]}
+                        class="w-full cursor-pointer"
+                        phx-hook="SyncInputs"
+                        data-target={"number-#{criterion.id}"}
+                        data-display={"display-#{criterion.id}"}
+                      />
+                    </div>
+                    <div class="flex-shrink-0 score-value">
+                      <span id={"display-#{criterion.id}"}><%= @scores_form[criterion.id][:value] %></span>
+                    </div>
+                    <div class="flex-shrink-0 w-20 number-input-container">
+                      <input 
+                        type="number" 
+                        id={"number-#{criterion.id}"}
+                        name={"scores[#{criterion.id}]"}
+                        value={@scores_form[criterion.id][:value]}
+                        min="0" 
+                        max={criterion.max_points}
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        phx-hook="SyncInputs"
+                        data-target={"range-#{criterion.id}"}
+                        data-display={"display-#{criterion.id}"}
+                      />
+                    </div>
+                  </div>
+                  <div class="flex justify-between px-1 text-xs text-gray-500 mt-1">
+                    <span>0</span>
+                    <span><%= criterion.max_points %></span>
+                  </div>
+                </div>
+              </div>
+            <% else %>
+              <div class="pl-4 space-y-5">
+                <%= for sub_criterion <- criterion.sub_criteria do %>
+                <div class="criterion-container mb-2">
+                    <label for={"number-#{sub_criterion.id}"} class="block text-sm font-medium text-gray-700 mb-1">
+                      <%= sub_criterion.name %>
+                    </label>
+                    <p class="text-xs text-gray-500 mb-2">
+                      <%= if sub_criterion.description, do: sub_criterion.description, else: "Sin descripción" %> 
+                      (<%= sub_criterion.max_points %> puntos máximo)
+                    </p>
+                    <div class="flex flex-col space-y-2">
+                      <div class="flex items-center gap-4">
+                        <div class="flex-grow">
+                          <input 
+                            type="range" 
+                            id={"range-#{sub_criterion.id}"} 
+                            min="0" 
+                            max={sub_criterion.max_points} 
+                            step="1"
+                            value={@scores_form[criterion.id][:sub_criteria][sub_criterion.id]}
+                            class="w-full cursor-pointer"
+                            phx-hook="SyncInputs"
+                            data-target={"number-#{sub_criterion.id}"}
+                            data-display={"display-#{sub_criterion.id}"}
+                          />
+                        </div>
+                        <div class="flex-shrink-0 score-value">
+                          <span id={"display-#{sub_criterion.id}"}><%= @scores_form[criterion.id][:sub_criteria][sub_criterion.id] %></span>
+                        </div>
+                        <div class="flex-shrink-0 w-20 number-input-container">
+                          <input 
+                            type="number" 
+                            id={"number-#{sub_criterion.id}"}
+                            name={"scores[#{sub_criterion.id}]"}
+                            value={@scores_form[criterion.id][:sub_criteria][sub_criterion.id]}
+                            min="0" 
+                            max={sub_criterion.max_points}
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            phx-hook="SyncInputs"
+                            data-target={"range-#{sub_criterion.id}"}
+                            data-display={"display-#{sub_criterion.id}"}
+                          />
+                        </div>
+                      </div>
+                      <div class="flex justify-between px-1 text-xs text-gray-500 mt-1">
+                        <span>0</span>
+                        <span><%= sub_criterion.max_points %></span>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        
+        <div class="mt-6">
+          <.button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition-colors">
+            Guardar Calificaciones
+          </.button>
+        </div>
+      </div>
+    </form>
+  <% end %>
 </div>

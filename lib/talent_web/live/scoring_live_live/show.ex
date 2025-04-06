@@ -9,7 +9,6 @@ defmodule TalentWeb.ScoringLive.Show do
   alias Talent.Scoring
   alias Talent.Repo
   alias Talent.Scoring.JudgeCriterion
-  # alias Talent.Scoring.Score
 
   @impl true
   def mount(%{"participant_id" => participant_id}, _session, socket) do
@@ -39,6 +38,12 @@ defmodule TalentWeb.ScoringLive.Show do
             where: j.judge_id == ^judge_id and j.category_id == ^category_id)
           |> Repo.exists?()
 
+        # Verificar si hay asignaciones para CUALQUIER juez en esta categoría
+        any_judge_has_assignments =
+          from(j in JudgeCriterion,
+            where: j.category_id == ^category_id)
+          |> Repo.exists?()
+
         # Filtrar los criterios que el juez puede calificar
         criteria = cond do
           # Si hay asignaciones específicas para este juez en esta categoría, usar solo esas
@@ -60,13 +65,20 @@ defmodule TalentWeb.ScoringLive.Show do
 
             filtered_criteria
 
-          # Si no hay asignaciones específicas pero hay asignaciones en general, no mostrar nada
-          has_any_criteria_assignments ->
+          # Si este juez no tiene asignaciones pero otros jueces sí las tienen,
+          # no mostrar ningún criterio
+          has_any_criteria_assignments == false and any_judge_has_assignments == true ->
             []
 
-          # Si no hay asignaciones en absoluto (sistema inicial), mostrar todos
-          true ->
+          # Si ningún juez tiene asignaciones específicas para esta categoría,
+          # mostrar todos los criterios (comportamiento original)
+          any_judge_has_assignments == false ->
             all_criteria
+
+          # Por defecto, si este juez no tiene asignaciones pero otros sí,
+          # no mostrar nada
+          true ->
+            []
         end
 
         # Obtener las puntuaciones existentes del juez para este participante
