@@ -158,3 +158,11 @@
     </form>
   <% end %>
 </div>
+<div id="total-score-circle" 
+     class="fixed top-14 right-4 h-16 w-16 rounded-full bg-indigo-600 shadow-lg flex items-center justify-center z-50 text-white font-bold border-2 border-white" 
+     phx-hook="UpdateTotalScore">
+  <div>
+    <div class="text-xl" id="total-score-value">0</div>
+    <div class="text-xs">puntos</div>
+  </div>
+</div>

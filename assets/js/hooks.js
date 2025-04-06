@@ -181,4 +181,48 @@ Hooks.NetworkFormFields = {
   }
 };
 
+Hooks.UpdateTotalScore = {
+  mounted() {
+    this.calculateTotal();
+    
+    // Observar cambios en los inputs de puntuación
+    const scoreInputs = document.querySelectorAll('input[type="number"][id^="number-"], input[type="range"][id^="range-"]');
+    scoreInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        this.calculateTotal();
+      });
+    });
+  },
+  
+  calculateTotal() {
+    // Obtener todos los inputs de puntuación (solo los números, no los rangos duplicados)
+    const scoreInputs = document.querySelectorAll('input[type="number"][id^="number-"]');
+    let total = 0;
+    
+    // Sumar todos los valores
+    scoreInputs.forEach(input => {
+      const value = parseFloat(input.value) || 0;
+      total += value;
+    });
+    
+    // Actualizar el valor en el círculo
+    const totalElement = document.getElementById('total-score-value');
+    if (totalElement) {
+      totalElement.textContent = Math.round(total);
+      
+      // Cambiar el color según el puntaje (opcional)
+      const circle = this.el;
+      if (total === 0) {
+        circle.classList.replace('bg-indigo-600', 'bg-gray-500');
+      } else if (total < 50) {
+        circle.classList.replace('bg-gray-500', 'bg-indigo-600');
+        circle.classList.replace('bg-green-600', 'bg-indigo-600');
+      } else {
+        circle.classList.replace('bg-indigo-600', 'bg-green-600');
+        circle.classList.replace('bg-gray-500', 'bg-green-600');
+      }
+    }
+  }
+}
+
 export default Hooks;
